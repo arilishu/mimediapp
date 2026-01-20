@@ -1,0 +1,192 @@
+MiPediApp – Gestión de Salud Infantil
+1. Product Overview
+MiPediApp es una aplicación móvil (Android e iOS) desarrollada con Expo (React Native) que permite a padres, médicos y cuidadores autorizados gestionar y consultar información médica pediátrica desde un único lugar seguro.
+La aplicación centraliza datos clave de salud infantil, incluyendo visitas médicas, vacunas, medicamentos, alergias, enfermedades previas y turnos médicos, con visualizaciones claras y alertas proactivas.
+El sistema está diseñado para escalar a una futura versión web compartiendo el mismo backend y sistema de autenticación.
+
+2. Product Goals
+Centralizar información médica infantil de forma segura.
+Permitir acceso controlado a múltiples usuarios por niño.
+Mejorar el seguimiento del crecimiento y la salud.
+Incrementar la adherencia a vacunas y controles médicos.
+Reducir la fragmentación de información clínica.
+
+3. Target Users
+Padres y madres
+Tutores legales
+Médicos pediatras
+Cuidadores autorizados
+
+4. Technical Architecture
+Frontend
+Expo (React Native)
+Compatible con Expo Go
+Preparado para Android e iOS
+Backend
+Supabase
+Supabase Edge Functions como API backend
+APIs versionadas: /v1/{endpoint}
+Authentication
+Supabase Auth
+Email + password
+Preparado para Google SSO
+JWT para autenticación
+El frontend envía el JWT vía Authorization: Bearer <token>
+Authorization
+Basada en backend
+Relación usuario ↔ niño con permisos:
+read-only
+editable
+
+5. Core Data Models (conceptual)
+User
+id
+email
+createdAt
+active (t/f)
+Child
+id
+name
+birth_date
+sex
+UserChildAccess
+user_id
+child_id
+permission (read | write)
+
+6. Functional Requirements
+6.1 Authentication
+Login con email y password
+Logout
+Recuperación de contraseña
+Persistencia de sesión
+Cada usuario puede tener acceso a múltiples niños
+
+6.2 Child Management (CRUD)
+Crear, editar y eliminar perfil de niño
+Campos obligatorios:
+Nombre
+Fecha de nacimiento
+Sexo
+
+6.3 Medical Visits
+Crear visitas médicas con:
+Médico (seleccionar existente o crear nuevo)
+Fecha (default: hoy)
+Peso (kg)
+Altura (cm)
+Perímetro cefálico (cm)
+Indicaciones / notas
+Mostrar últimas 3 visitas
+Opción “Ver más”
+Agendar próxima visita
+Recordatorio para pedir turno
+
+6.4 Growth Curve
+Gráfico interactivo:
+Peso vs fecha
+Altura vs fecha
+Datos obtenidos de visitas médicas
+
+6.5 Medications
+CRUD de medicamentos por niño
+Campos:
+Nombre
+Dosis
+Categoría (Dermatología, Oftalmología, etc.)
+Dosis recomendada por peso/edad (opcional)
+Mostrar últimos 3 medicamentos frecuentes
+
+6.6 Vaccines
+Calendario de vacunación según edad
+Marcar vacunas aplicadas con fecha
+Mostrar próximas vacunas
+Alertas de vacunación
+
+6.7 Medical Appointments
+CRUD de turnos médicos
+Fecha, médico, observaciones
+Alertas de recordatorio
+Mostrar próximos 3 turnos en perfil del niño
+
+6.8 Allergies
+CRUD de alergias por niño
+Mostrar 3 más recientes
+Opción “Ver más”
+
+6.9 Past Diseases
+CRUD con:
+Fecha
+Nombre de la enfermedad
+Comentarios
+
+6.10 Frequent Doctors
+CRUD de médicos frecuentes:
+Nombre
+Especialidad
+Teléfono
+Mostrar últimos 3
+
+6.11 Emergency Hospitals
+CRUD de hospitales:
+Nombre
+Dirección
+Teléfono
+Especialidades
+Acceso rápido desde navegación
+
+6.12 Share Child Profile
+Generar link único por niño (UUID o token)
+Usuario autenticado puede aceptar el acceso
+Permisos configurables:
+Solo lectura
+Edición completa
+
+7. Main Screens
+7.1 Dashboard
+Lista de niños
+Botón “+ Nuevo Niño”
+Acceso a perfil individual
+7.2 Child Profile
+Últimas 3 visitas médicas
+Próximo turno
+Curva de crecimiento
+Medicamentos frecuentes (3)
+Vacunas recientes (3)
+Turnos próximos (3)
+Alergias (3)
+Médicos frecuentes (3)
+Enfermedades pasadas (3)
+Botón “Compartir perfil”
+
+7.3 Medical Visits
+Lista completa
+Agregar visita
+Agendar próxima visita
+
+7.4 Medications
+Lista completa
+CRUD
+
+7.5 Appointments
+CRUD
+Alertas
+
+7.6 Vaccines
+Lista de aplicadas y pendientes
+Editar fecha
+
+7.7 Allergies / Doctors / Diseases
+CRUD completo por sección
+
+7.8 Emergencies
+CRUD de hospitales
+Acceso rápido
+
+8. Non-Functional Requirements
+Código limpio y modular
+Uso de componentes reutilizables
+Manejo básico de errores
+Loading y empty states
+Preparado para escalar a web
+
