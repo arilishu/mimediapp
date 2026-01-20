@@ -1,16 +1,55 @@
-import React from "react";
-import { StyleSheet } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import * as SplashScreen from "expo-splash-screen";
+import {
+  useFonts,
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+} from "@expo-google-fonts/nunito";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
 
 import RootStackNavigator from "@/navigation/RootStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useTheme } from "@/hooks/useTheme";
+
+SplashScreen.preventAutoHideAsync();
+
+function AppContent() {
+  const { theme } = useTheme();
+  const [fontsLoaded, fontError] = useFonts({
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View style={[styles.loading, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <RootStackNavigator />
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   return (
@@ -19,9 +58,7 @@ export default function App() {
         <SafeAreaProvider>
           <GestureHandlerRootView style={styles.root}>
             <KeyboardProvider>
-              <NavigationContainer>
-                <RootStackNavigator />
-              </NavigationContainer>
+              <AppContent />
               <StatusBar style="auto" />
             </KeyboardProvider>
           </GestureHandlerRootView>
@@ -34,5 +71,10 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

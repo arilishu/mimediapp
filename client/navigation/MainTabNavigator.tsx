@@ -3,13 +3,20 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
-import HomeStackNavigator from "@/navigation/HomeStackNavigator";
-import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
+
+import DashboardStackNavigator from "@/navigation/DashboardStackNavigator";
+import VisitsStackNavigator from "@/navigation/VisitsStackNavigator";
+import VaccinesStackNavigator from "@/navigation/VaccinesStackNavigator";
+import AppointmentsStackNavigator from "@/navigation/AppointmentsStackNavigator";
+import EmergencyStackNavigator from "@/navigation/EmergencyStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
-  HomeTab: undefined;
-  ProfileTab: undefined;
+  DashboardTab: undefined;
+  VisitsTab: undefined;
+  VaccinesTab: undefined;
+  AppointmentsTab: undefined;
+  EmergencyTab: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -19,7 +26,7 @@ export default function MainTabNavigator() {
 
   return (
     <Tab.Navigator
-      initialRouteName="HomeTab"
+      initialRouteName="DashboardTab"
       screenOptions={{
         tabBarActiveTintColor: theme.tabIconSelected,
         tabBarInactiveTintColor: theme.tabIconDefault,
@@ -44,22 +51,52 @@ export default function MainTabNavigator() {
       }}
     >
       <Tab.Screen
-        name="HomeTab"
-        component={HomeStackNavigator}
+        name="DashboardTab"
+        component={DashboardStackNavigator}
         options={{
-          title: "Home",
+          title: "Niños",
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStackNavigator}
+        name="VisitsTab"
+        component={VisitsStackNavigator}
         options={{
-          title: "Profile",
+          title: "Visitas",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
+            <Feather name="calendar" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="VaccinesTab"
+        component={VaccinesStackNavigator}
+        options={{
+          title: "Vacunas",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="shield" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="AppointmentsTab"
+        component={AppointmentsStackNavigator}
+        options={{
+          title: "Turnos",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="clock" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="EmergencyTab"
+        component={EmergencyStackNavigator}
+        options={{
+          title: "Emergencias",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="alert-circle" size={size} color={color} />
           ),
         }}
       />

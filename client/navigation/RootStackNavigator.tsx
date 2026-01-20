@@ -1,12 +1,22 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
 import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ModalScreen from "@/screens/ModalScreen";
+import ChildProfileScreen from "@/screens/ChildProfileScreen";
+import AddChildScreen from "@/screens/AddChildScreen";
+import AddVisitScreen from "@/screens/AddVisitScreen";
+import AddAppointmentScreen from "@/screens/AddAppointmentScreen";
+import AddHospitalScreen from "@/screens/AddHospitalScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
   Main: undefined;
-  Modal: undefined;
+  ChildProfile: { childId: string };
+  AddChild: undefined;
+  AddVisit: { childId: string };
+  VisitsList: { childId: string };
+  AddAppointment: { childId: string };
+  AddHospital: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -22,11 +32,42 @@ export default function RootStackNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="Modal"
-        component={ModalScreen}
+        name="ChildProfile"
+        component={ChildProfileScreen}
+        options={{
+          headerTitle: "Perfil",
+        }}
+      />
+      <Stack.Screen
+        name="AddChild"
+        component={AddChildScreen}
         options={{
           presentation: "modal",
-          headerTitle: "Modal",
+          headerTitle: "Nuevo Niño",
+        }}
+      />
+      <Stack.Screen
+        name="AddVisit"
+        component={AddVisitScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Nueva Visita",
+        }}
+      />
+      <Stack.Screen
+        name="AddAppointment"
+        component={AddAppointmentScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Nuevo Turno",
+        }}
+      />
+      <Stack.Screen
+        name="AddHospital"
+        component={AddHospitalScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Nuevo Hospital",
         }}
       />
     </Stack.Navigator>
