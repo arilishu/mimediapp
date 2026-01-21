@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, FlatList, StyleSheet, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useRoute, RouteProp } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@clerk/clerk-expo";
 
@@ -15,8 +15,13 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { ChildrenAPI, VaccinesAPI } from "@/lib/api";
 import type { Child, Vaccine } from "@/types";
+import type { VaccinesStackParamList } from "@/navigation/VaccinesStackNavigator";
+
+type VaccinesScreenRouteProp = RouteProp<VaccinesStackParamList, "Vaccines">;
 
 export default function VaccinesScreen() {
+  const route = useRoute<VaccinesScreenRouteProp>();
+  const initialChildId = route.params?.childId;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
@@ -29,6 +34,13 @@ export default function VaccinesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Apply initial childId when navigating from dashboard
+  useEffect(() => {
+    if (initialChildId) {
+      setSelectedChildId(initialChildId);
+    }
+  }, [initialChildId]);
+
   const loadData = useCallback(async () => {
     if (!userId) return;
     
@@ -36,7 +48,7 @@ export default function VaccinesScreen() {
       const childrenData = await ChildrenAPI.getAll(userId);
       setChildren(childrenData);
 
-      if (childrenData.length > 0 && !selectedChildId) {
+      if (childrenData.length > 0 && !selectedChildId && !initialChildId) {
         setSelectedChildId(childrenData[0].id);
       }
     } catch (error) {
@@ -45,7 +57,7 @@ export default function VaccinesScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [selectedChildId, userId]);
+  }, [selectedChildId, userId, initialChildId]);
 
   const loadVaccines = useCallback(async () => {
     if (!selectedChildId) {

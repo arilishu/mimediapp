@@ -14,7 +14,7 @@ import { useTheme } from "@/hooks/useTheme";
 export type MainTabParamList = {
   DashboardTab: undefined;
   VisitsTab: undefined;
-  VaccinesTab: undefined;
+  VaccinesTab: { screen: string; params?: { childId?: string } } | undefined;
   AppointmentsTab: undefined;
   EmergencyTab: undefined;
 };

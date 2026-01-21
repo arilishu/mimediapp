@@ -5,7 +5,7 @@ import VaccinesScreen from "@/screens/VaccinesScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type VaccinesStackParamList = {
-  Vaccines: undefined;
+  Vaccines: { childId?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<VaccinesStackParamList>();

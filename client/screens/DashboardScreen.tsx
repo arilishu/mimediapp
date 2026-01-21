@@ -3,8 +3,9 @@ import { View, ScrollView, StyleSheet, RefreshControl, Text, Pressable } from "r
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
@@ -20,8 +21,12 @@ import { ChildrenAPI, AppointmentsAPI, VaccinesAPI } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import type { Child, Appointment, VaccineWithChild } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
+import type { MainTabParamList } from "@/navigation/MainTabNavigator";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<RootStackParamList>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
@@ -200,7 +205,10 @@ export default function DashboardScreen() {
               key={vaccine.id} 
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate("ChildProfile", { childId: vaccine.childId });
+                navigation.navigate("VaccinesTab", { 
+                  screen: "Vaccines", 
+                  params: { childId: vaccine.childId } 
+                });
               }}
             >
               <Card style={styles.vaccineCard}>
