@@ -5,6 +5,20 @@ export interface Child {
   sex: "male" | "female";
   avatarIndex: number;
   createdAt: string;
+  ownerId?: string;
+  isShared?: boolean;
+  isReadOnly?: boolean;
+  sharedFromCode?: string;
+}
+
+export interface ShareCode {
+  id: string;
+  childId: string;
+  code: string;
+  ownerId: string;
+  isReadOnly: boolean;
+  createdAt: string;
+  expiresAt?: string;
 }
 
 export interface MedicalVisit {

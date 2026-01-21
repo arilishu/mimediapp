@@ -11,6 +11,7 @@ import type {
   Allergy,
   PastDisease,
   Hospital,
+  ShareCode,
 } from "@/types";
 
 const KEYS = {
@@ -23,6 +24,7 @@ const KEYS = {
   ALLERGIES: "@mipediapp_allergies",
   DISEASES: "@mipediapp_diseases",
   HOSPITALS: "@mipediapp_hospitals",
+  SHARE_CODES: "@mipediapp_share_codes",
 };
 
 async function getItems<T>(key: string): Promise<T[]> {
@@ -360,6 +362,57 @@ export const HospitalStorage = {
     await setItems(
       KEYS.HOSPITALS,
       hospitals.filter((h) => h.id !== id)
+    );
+  },
+};
+
+function generateShareCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+export const ShareCodeStorage = {
+  getAll: () => getItems<ShareCode>(KEYS.SHARE_CODES),
+  getByChildId: async (childId: string) => {
+    const codes = await getItems<ShareCode>(KEYS.SHARE_CODES);
+    return codes.find((c) => c.childId === childId);
+  },
+  getByCode: async (code: string) => {
+    const codes = await getItems<ShareCode>(KEYS.SHARE_CODES);
+    return codes.find((c) => c.code === code.toUpperCase());
+  },
+  create: async (data: Omit<ShareCode, "id" | "code" | "createdAt">) => {
+    const codes = await getItems<ShareCode>(KEYS.SHARE_CODES);
+    const existingCode = codes.find((c) => c.childId === data.childId);
+    if (existingCode) {
+      return existingCode;
+    }
+    const newCode: ShareCode = {
+      ...data,
+      id: uuidv4(),
+      code: generateShareCode(),
+      createdAt: new Date().toISOString(),
+    };
+    await setItems(KEYS.SHARE_CODES, [...codes, newCode]);
+    return newCode;
+  },
+  update: async (childId: string, data: Partial<ShareCode>) => {
+    const codes = await getItems<ShareCode>(KEYS.SHARE_CODES);
+    const index = codes.findIndex((c) => c.childId === childId);
+    if (index === -1) throw new Error("Share code not found");
+    codes[index] = { ...codes[index], ...data };
+    await setItems(KEYS.SHARE_CODES, codes);
+    return codes[index];
+  },
+  delete: async (childId: string) => {
+    const codes = await getItems<ShareCode>(KEYS.SHARE_CODES);
+    await setItems(
+      KEYS.SHARE_CODES,
+      codes.filter((c) => c.childId !== childId)
     );
   },
 };
