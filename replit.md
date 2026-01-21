@@ -43,8 +43,10 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 - `GET/PUT/DELETE /api/children/:id` - Get/update/delete child
 - `GET/POST /api/visits` - List/create visits (requires childId)
 - `GET/POST /api/vaccines` - List/create vaccines
+- `GET /api/vaccines/user/:userId` - Get pending vaccines for all user's children
 - `POST /api/vaccines/batch` - Initialize vaccine schedule
 - `GET/POST /api/appointments` - List/create appointments
+- `GET /api/appointments/user/:userId` - Get upcoming appointments for all user's children
 - `GET/POST /api/allergies` - List/create allergies
 - `GET/POST /api/diseases` - List/create past diseases
 - `GET/POST /api/medications` - List/create medications
@@ -70,7 +72,10 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 
 ## Key Features
 1. **Authentication**: Secure login with email/password or Google SSO
-2. **Dashboard**: View and manage child profiles
+2. **Dashboard**: View and manage child profiles with:
+   - "Mis Hijos" section showing child cards
+   - "Proximos Turnos" section showing upcoming appointments
+   - "Vacunas Pendientes" section showing pending vaccines
 3. **Medical Visits**: Log weight, height, head circumference, doctor visits
 4. **Vaccination Calendar**: Track applied and pending vaccines
 5. **Appointments**: Schedule and manage medical appointments
@@ -92,7 +97,13 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 - Date format: DD MMM YYYY
 - All UI text in Spanish
 
+## Test Credentials
+- Email: replit@replit.com
+- Password: replitClerk
+
 ## Recent Changes
+- Added Dashboard sections for "Mis Hijos", "Proximos Turnos", and "Vacunas Pendientes"
+- Added API endpoints for user-level appointments and vaccines queries
 - Migrated all data storage from AsyncStorage to PostgreSQL database
 - Added REST API endpoints for all entities
 - Implemented user-based data isolation using Clerk userId
