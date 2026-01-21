@@ -229,26 +229,33 @@ export default function ChildProfileScreen() {
       <View style={styles.section}>
         <SectionHeader
           title="Medicamentos"
-          onSeeMore={() => {}}
-          showSeeMore={medications.length > 3}
+          onSeeMore={() => navigation.navigate("MedicationsList", { childId })}
+          showSeeMore={medications.length > 0}
         />
         {recentMedications.length > 0 ? (
           <View style={styles.chips}>
             {recentMedications.map((med) => (
-              <View
+              <Pressable
                 key={med.id}
+                onPress={() => navigation.navigate("MedicationsList", { childId })}
                 style={[styles.chip, { backgroundColor: theme.secondary + "30" }]}
               >
                 <ThemedText type="small" style={{ fontWeight: "500" }}>
-                  {med.name}
+                  {med.name} - {med.dose}
                 </ThemedText>
-              </View>
+              </Pressable>
             ))}
           </View>
         ) : (
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            No hay medicamentos registrados
-          </ThemedText>
+          <Pressable
+            onPress={() => navigation.navigate("AddMedication", { childId })}
+            style={[styles.addCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <Feather name="plus" size={20} color={theme.primary} />
+            <ThemedText type="body" style={{ color: theme.primary }}>
+              Agregar medicamento
+            </ThemedText>
+          </Pressable>
         )}
       </View>
 
