@@ -14,20 +14,44 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
   - **screens/**: Application screens organized by feature
   - **navigation/**: Navigation structure with tab and stack navigators
   - **constants/theme.ts**: Design system colors, spacing, typography
-  - **lib/storage.ts**: AsyncStorage utilities for local data persistence
+  - **lib/api.ts**: API client with typed helpers for all entities
+  - **lib/storage.ts**: AsyncStorage utilities (legacy, used for local preferences)
   - **lib/utils.ts**: Helper functions (date formatting, age calculation)
   - **types/index.ts**: TypeScript type definitions
 
 ### Backend (Express.js)
 - **server/**: Express.js API server
   - **index.ts**: Server configuration with CORS, body parsing, static serving
-  - **routes.ts**: API route definitions
+  - **routes.ts**: Full REST API with CRUD endpoints for all entities
 
-### Data Storage
-- Uses AsyncStorage for local persistence (device-local data)
-- Uses PostgreSQL database for shared data (share codes)
-- Data models: Children, Medical Visits, Doctors, Medications, Vaccines, Appointments, Allergies, Past Diseases, Hospitals
-- Share codes stored in PostgreSQL to enable cross-device sharing
+### Database (PostgreSQL)
+All data is stored in PostgreSQL for multi-user access and cross-device synchronization:
+- **children**: Child profiles with owner association
+- **medical_visits**: Visit records with measurements
+- **vaccines**: Vaccination schedule and status
+- **appointments**: Scheduled medical appointments
+- **allergies**: Allergy records with severity
+- **past_diseases**: Disease history
+- **medications**: Medication records
+- **doctors**: Doctor registry (user-owned)
+- **hospitals**: Hospital/emergency contacts (user-owned)
+- **share_codes**: 8-character codes for child sharing
+- **child_access**: Multi-user access permissions for shared children
+
+### API Endpoints
+- `GET/POST /api/children` - List/create children (requires userId)
+- `GET/PUT/DELETE /api/children/:id` - Get/update/delete child
+- `GET/POST /api/visits` - List/create visits (requires childId)
+- `GET/POST /api/vaccines` - List/create vaccines
+- `POST /api/vaccines/batch` - Initialize vaccine schedule
+- `GET/POST /api/appointments` - List/create appointments
+- `GET/POST /api/allergies` - List/create allergies
+- `GET/POST /api/diseases` - List/create past diseases
+- `GET/POST /api/medications` - List/create medications
+- `GET/POST /api/doctors` - List/create doctors (requires userId)
+- `GET/POST /api/hospitals` - List/create hospitals (requires userId)
+- `POST/GET /api/share-codes` - Create/lookup share codes
+- `POST /api/child-access` - Grant access to shared children
 
 ## Design System
 - **Primary Color**: #6BA5CF (soft sky blue)
@@ -42,6 +66,7 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
 - **Token Storage**: expo-secure-store
 - **Screens**: SignInScreen, SignUpScreen (with email verification)
 - **Secret**: EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY (required)
+- **User ID**: All API calls use Clerk userId for data isolation
 
 ## Key Features
 1. **Authentication**: Secure login with email/password or Google SSO
@@ -54,6 +79,7 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
    - Generate share codes from child card menu
    - Read-only or full access toggle
    - Load shared children using code in AddChildScreen
+   - Data stored in PostgreSQL for cross-device access
 
 ## Running the App
 - Frontend runs on port 8081 (Expo)
@@ -65,3 +91,9 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
 - Language: Spanish (es-ES)
 - Date format: DD MMM YYYY
 - All UI text in Spanish
+
+## Recent Changes
+- Migrated all data storage from AsyncStorage to PostgreSQL database
+- Added REST API endpoints for all entities
+- Implemented user-based data isolation using Clerk userId
+- Added child sharing with share_codes and child_access tables
