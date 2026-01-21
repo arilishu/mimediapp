@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { View, FlatList, StyleSheet, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -11,6 +11,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ChildCard } from "@/components/ChildCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { ShareModal } from "@/components/ShareModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 import { ChildStorage } from "@/lib/storage";
@@ -29,6 +30,8 @@ export default function DashboardScreen() {
   const [children, setChildren] = useState<Child[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
 
   const loadChildren = useCallback(async () => {
     try {
@@ -62,9 +65,18 @@ export default function DashboardScreen() {
     navigation.navigate("ChildProfile", { childId: child.id });
   };
 
+  const handleShareChild = (child: Child) => {
+    setSelectedChild(child);
+    setShareModalVisible(true);
+  };
+
   const renderItem = ({ item, index }: { item: Child; index: number }) => (
     <View style={[styles.cardWrapper, index % 2 === 0 ? styles.cardLeft : styles.cardRight]}>
-      <ChildCard child={item} onPress={() => handleChildPress(item)} />
+      <ChildCard
+        child={item}
+        onPress={() => handleChildPress(item)}
+        onShare={() => handleShareChild(item)}
+      />
     </View>
   );
 
@@ -111,6 +123,16 @@ export default function DashboardScreen() {
             bottom: tabBarHeight + Spacing.xl,
             right: Spacing.xl,
           }}
+        />
+      ) : null}
+      {selectedChild ? (
+        <ShareModal
+          visible={shareModalVisible}
+          onClose={() => {
+            setShareModalVisible(false);
+            setSelectedChild(null);
+          }}
+          child={selectedChild}
         />
       ) : null}
     </View>
