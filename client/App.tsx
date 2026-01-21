@@ -12,15 +12,43 @@ import {
   Nunito_600SemiBold,
   Nunito_700Bold,
 } from "@expo-google-fonts/nunito";
+import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
+import { tokenCache } from "@/lib/clerk";
 
 import RootStackNavigator from "@/navigation/RootStackNavigator";
+import AuthNavigator from "@/navigation/AuthNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
 
 SplashScreen.preventAutoHideAsync();
+
+const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+if (!clerkPublishableKey) {
+  throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable");
+}
+
+function AuthenticatedApp() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { theme } = useTheme();
+
+  if (!isLoaded) {
+    return (
+      <View style={[styles.loading, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      {isSignedIn ? <RootStackNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
+  );
+}
 
 function AppContent() {
   const { theme } = useTheme();
@@ -45,9 +73,11 @@ function AppContent() {
   }
 
   return (
-    <NavigationContainer>
-      <RootStackNavigator />
-    </NavigationContainer>
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
+      <ClerkLoaded>
+        <AuthenticatedApp />
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }
 

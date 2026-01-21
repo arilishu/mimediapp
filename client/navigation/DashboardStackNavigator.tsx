@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable } from "react-native";
+import { Pressable, Alert } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
+import { useClerk } from "@clerk/clerk-expo";
 
 import DashboardScreen from "@/screens/DashboardScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
@@ -14,9 +15,40 @@ export type DashboardStackParamList = {
 
 const Stack = createNativeStackNavigator<DashboardStackParamList>();
 
+function SignOutButton() {
+  const { theme } = useTheme();
+  const { signOut } = useClerk();
+
+  const handleSignOut = () => {
+    Alert.alert(
+      "Cerrar Sesión",
+      "¿Estás seguro que deseas cerrar sesión?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Cerrar Sesión",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              console.error("Error signing out:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <Pressable onPress={handleSignOut} hitSlop={8} testID="button-signout">
+      <Feather name="log-out" size={22} color={theme.text} />
+    </Pressable>
+  );
+}
+
 export default function DashboardStackNavigator() {
   const screenOptions = useScreenOptions();
-  const { theme } = useTheme();
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
@@ -25,6 +57,7 @@ export default function DashboardStackNavigator() {
         component={DashboardScreen}
         options={{
           headerTitle: () => <HeaderTitle title="Mis Niños" />,
+          headerRight: () => <SignOutButton />,
         }}
       />
     </Stack.Navigator>
