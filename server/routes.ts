@@ -522,8 +522,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
          JOIN children c ON a.child_id = c.id
          LEFT JOIN child_access ca ON c.id = ca.child_id AND ca.user_id = $1
          WHERE (c.owner_id = $1 OR ca.user_id = $1)
-           AND a.date >= CURRENT_DATE
-         ORDER BY a.date ASC, a.time ASC
+           AND a.date::date >= CURRENT_DATE
+         ORDER BY a.date::date ASC, a.time ASC
          LIMIT 5`,
         [userId]
       );
