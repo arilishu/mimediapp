@@ -7,7 +7,7 @@ import {
   Switch,
   Share,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
@@ -38,7 +38,6 @@ interface ShareModalProps {
 export function ShareModal({ visible, onClose, child }: ShareModalProps) {
   const { theme } = useTheme();
   const { userId } = useAuth();
-  const insets = useSafeAreaInsets();
   const [shareCode, setShareCode] = useState<ShareCodeResponse | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -180,7 +179,7 @@ export function ShareModal({ visible, onClose, child }: ShareModalProps) {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={[styles.overlay, { paddingTop: insets.top + Spacing.xl, paddingBottom: insets.bottom + Spacing.xl }]}>
+      <SafeAreaView style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: theme.backgroundDefault }]}>
           <View style={styles.header}>
             <ThemedText type="h4">Compartir a {child.name}</ThemedText>
@@ -256,7 +255,7 @@ export function ShareModal({ visible, onClose, child }: ShareModalProps) {
             </Button>
           )}
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
