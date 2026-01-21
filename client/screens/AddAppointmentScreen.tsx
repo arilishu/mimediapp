@@ -18,6 +18,7 @@ import { ChildSelector } from "@/components/ChildSelector";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { AppointmentsAPI, DoctorsAPI, ChildrenAPI } from "@/lib/api";
+import { scheduleAppointmentReminders } from "@/lib/notifications";
 import type { Doctor, Child } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -84,13 +85,25 @@ export default function AddAppointmentScreen() {
         doctorId = newDoctor.id;
       }
 
-      await AppointmentsAPI.create({
+      const appointment = await AppointmentsAPI.create({
         childId: selectedChildId,
         doctorId: doctorId || undefined,
         date: date.toISOString(),
         time,
         notes: notes.trim() || undefined,
       });
+
+      const selectedChild = children.find(c => c.id === selectedChildId);
+      const selectedDoctor = doctors.find(d => d.id === doctorId);
+      
+      if (selectedChild && appointment.id) {
+        scheduleAppointmentReminders(
+          appointment.id,
+          selectedChild.name,
+          date,
+          selectedDoctor?.specialty
+        );
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
