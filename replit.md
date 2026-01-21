@@ -25,7 +25,7 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
 
 ### Data Storage
 - Uses AsyncStorage for local persistence
-- Data models: Children, Medical Visits, Doctors, Medications, Vaccines, Appointments, Allergies, Past Diseases, Hospitals
+- Data models: Children, Medical Visits, Doctors, Medications, Vaccines, Appointments, Allergies, Past Diseases, Hospitals, ShareCodes
 
 ## Design System
 - **Primary Color**: #6BA5CF (soft sky blue)
@@ -48,6 +48,10 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
 4. **Vaccination Calendar**: Track applied and pending vaccines
 5. **Appointments**: Schedule and manage medical appointments
 6. **Emergency Hospitals**: Quick access to emergency contacts with call/directions
+7. **Child Sharing**: Share child profiles with other users via 8-character codes
+   - Generate share codes from child card menu
+   - Read-only or full access toggle
+   - Load shared children using code in AddChildScreen
 
 ## Running the App
 - Frontend runs on port 8081 (Expo)
