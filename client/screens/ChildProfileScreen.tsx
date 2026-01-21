@@ -26,7 +26,7 @@ import {
   AllergiesAPI,
   DiseasesAPI,
 } from "@/lib/api";
-import { calculateAge, getChildTintColor, isFuture } from "@/lib/utils";
+import { calculateAge, getChildTintColor, isFuture, formatDate } from "@/lib/utils";
 import type { Child, MedicalVisit, Doctor, Appointment, Vaccine, Medication, Allergy, PastDisease } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -305,27 +305,41 @@ export default function ChildProfileScreen() {
       <View style={styles.section}>
         <SectionHeader
           title="Enfermedades Previas"
-          onSeeMore={() => {}}
-          showSeeMore={diseases.length > 3}
+          onSeeMore={() => navigation.navigate("DiseasesList", { childId })}
+          showSeeMore={diseases.length > 0}
         />
         {recentDiseases.length > 0 ? (
           recentDiseases.map((disease) => (
-            <View
+            <Pressable
               key={disease.id}
+              onPress={() => navigation.navigate("DiseasesList", { childId })}
               style={[styles.diseaseRow, { backgroundColor: theme.backgroundDefault }]}
             >
-              <ThemedText type="body" style={{ fontWeight: "500" }}>
-                {disease.name}
-              </ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                {disease.date}
-              </ThemedText>
-            </View>
+              <View style={styles.diseaseInfo}>
+                <ThemedText type="body" style={{ fontWeight: "500" }}>
+                  {disease.name}
+                </ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  {formatDate(disease.date)}
+                </ThemedText>
+              </View>
+              {disease.notes ? (
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  {disease.notes}
+                </ThemedText>
+              ) : null}
+            </Pressable>
           ))
         ) : (
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            No hay enfermedades registradas
-          </ThemedText>
+          <Pressable
+            onPress={() => navigation.navigate("AddDisease", { childId })}
+            style={[styles.addCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <Feather name="plus" size={20} color={theme.primary} />
+            <ThemedText type="body" style={{ color: theme.primary }}>
+              Agregar enfermedad
+            </ThemedText>
+          </Pressable>
         )}
       </View>
     </ScrollView>
@@ -395,5 +409,8 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.sm,
+  },
+  diseaseInfo: {
+    marginBottom: Spacing.xs,
   },
 });
