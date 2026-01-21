@@ -39,29 +39,40 @@ export default function SignInScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState("");
+
   const handleSignIn = useCallback(async () => {
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      console.log("Clerk not loaded yet");
+      return;
+    }
 
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Error", "Por favor completa todos los campos");
+      setErrorMessage("Por favor completa todos los campos");
       return;
     }
 
     setLoading(true);
+    setErrorMessage("");
     try {
+      console.log("Attempting sign in with:", email.trim());
       const result = await signIn.create({
         identifier: email.trim(),
         password: password,
       });
 
+      console.log("Sign in result:", result.status);
+
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
       } else {
-        Alert.alert("Error", "No se pudo completar el inicio de sesión");
+        console.log("Sign in incomplete, status:", result.status);
+        setErrorMessage("No se pudo completar el inicio de sesión. Verifica tus credenciales.");
       }
     } catch (err: any) {
-      const errorMessage = err.errors?.[0]?.message || "Error al iniciar sesión";
-      Alert.alert("Error", errorMessage);
+      console.error("Sign in error:", err);
+      const errMsg = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "Error al iniciar sesión";
+      setErrorMessage(errMsg);
     } finally {
       setLoading(false);
     }
@@ -108,6 +119,12 @@ export default function SignInScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.form}>
+          {errorMessage ? (
+            <View style={[styles.errorContainer, { backgroundColor: theme.error + "15", borderColor: theme.error }]}>
+              <ThemedText style={[styles.errorText, { color: theme.error }]}>{errorMessage}</ThemedText>
+            </View>
+          ) : null}
+
           <View style={styles.inputContainer}>
             <ThemedText style={styles.label}>Correo electrónico</ThemedText>
             <TextInput
@@ -299,5 +316,14 @@ const styles = StyleSheet.create({
   linkText: {
     ...Typography.body,
     fontFamily: "Nunito_700Bold",
+  },
+  errorContainer: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+  },
+  errorText: {
+    ...Typography.small,
+    textAlign: "center",
   },
 });
