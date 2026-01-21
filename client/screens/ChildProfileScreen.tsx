@@ -201,9 +201,12 @@ export default function ChildProfileScreen() {
           title="Vacunas"
           onSeeMore={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            (navigation as any).navigate("VaccinesTab", { 
-              screen: "Vaccines", 
-              params: { childId } 
+            (navigation as any).navigate("Main", {
+              screen: "VaccinesTab", 
+              params: { 
+                screen: "Vaccines", 
+                params: { childId } 
+              }
             });
           }}
           showSeeMore={vaccines.length > 3}
