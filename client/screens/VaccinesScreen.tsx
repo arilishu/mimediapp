@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { View, FlatList, StyleSheet, RefreshControl, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect, useRoute, RouteProp } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@clerk/clerk-expo";
+import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
 import { VaccineRow } from "@/components/VaccineRow";
@@ -18,6 +19,28 @@ import type { Child, Vaccine } from "@/types";
 import type { VaccinesStackParamList } from "@/navigation/VaccinesStackNavigator";
 
 type VaccinesScreenRouteProp = RouteProp<VaccinesStackParamList, "Vaccines">;
+
+function parseVaccineAgeInMonths(timing: string): number | null {
+  const t = timing.toLowerCase();
+  
+  if (t.includes("nacimiento")) return 0;
+  
+  const monthMatch = t.match(/(\d+)\s*mes/);
+  if (monthMatch) return parseInt(monthMatch[1]);
+  
+  const yearMatch = t.match(/(\d+)\s*año/);
+  if (yearMatch) return parseInt(yearMatch[1]) * 12;
+  
+  return null;
+}
+
+function getChildAgeInMonths(birthDate: string): number {
+  const birth = new Date(birthDate);
+  const now = new Date();
+  const months = (now.getFullYear() - birth.getFullYear()) * 12 + 
+                 (now.getMonth() - birth.getMonth());
+  return months;
+}
 
 export default function VaccinesScreen() {
   const route = useRoute<VaccinesScreenRouteProp>();
@@ -101,8 +124,34 @@ export default function VaccinesScreen() {
     loadVaccines();
   };
 
+  const selectedChild = children.find((c) => c.id === selectedChildId);
   const appliedVaccines = vaccines.filter((v) => v.isApplied);
   const pendingVaccines = vaccines.filter((v) => !v.isApplied);
+  
+  const pastDueVaccines = selectedChild 
+    ? pendingVaccines.filter((v) => {
+        const vaccineAge = parseVaccineAgeInMonths(v.recommendedAge);
+        const childAge = getChildAgeInMonths(selectedChild.birthDate);
+        return vaccineAge !== null && vaccineAge < childAge;
+      })
+    : [];
+
+  const handleMarkPastVaccinesApplied = async () => {
+    if (!selectedChild || pastDueVaccines.length === 0) return;
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    await Promise.all(
+      pastDueVaccines.map((v) =>
+        VaccinesAPI.update(v.id, {
+          isApplied: true,
+          appliedDate: new Date().toISOString(),
+        })
+      )
+    );
+    
+    loadVaccines();
+  };
 
   const renderItem = ({ item }: { item: Vaccine }) => (
     <VaccineRow vaccine={item} onToggle={() => handleToggleVaccine(item)} />
@@ -162,9 +211,21 @@ export default function VaccinesScreen() {
       ) : null}
 
       {pendingVaccines.length > 0 ? (
-        <ThemedText type="h4" style={styles.sectionTitle}>
-          Pendientes
-        </ThemedText>
+        <View style={styles.sectionHeader}>
+          <ThemedText type="h4">Pendientes</ThemedText>
+          {pastDueVaccines.length > 0 ? (
+            <Pressable
+              onPress={handleMarkPastVaccinesApplied}
+              style={[styles.markAllButton, { backgroundColor: theme.primary + "15" }]}
+              testID="button-mark-past-vaccines"
+            >
+              <Feather name="check-circle" size={14} color={theme.primary} />
+              <ThemedText type="small" style={{ color: theme.primary }}>
+                Marcar anteriores ({pastDueVaccines.length})
+              </ThemedText>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -228,5 +289,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginTop: Spacing.lg,
     marginBottom: Spacing.md,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  markAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
   },
 });
