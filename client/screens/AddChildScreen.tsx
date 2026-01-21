@@ -82,7 +82,11 @@ export default function AddChildScreen() {
   };
 
   const handleLoadSharedChild = async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.log("No userId available");
+      setErrors({ code: "Debes iniciar sesión primero" });
+      return;
+    }
     
     if (!shareCode.trim()) {
       setErrors({ code: "Ingresa un codigo de comparticion" });
@@ -95,15 +99,20 @@ export default function AddChildScreen() {
 
     try {
       const apiUrl = getApiUrl();
+      console.log("Looking up share code:", shareCode.trim());
       const response = await fetch(
         new URL(`/api/share-codes/${shareCode.trim()}`, apiUrl).toString()
       );
+
+      console.log("Share code lookup response status:", response.status);
 
       if (!response.ok) {
         if (response.status === 404) {
           setErrors({ code: "Codigo no encontrado. Verifica e intenta nuevamente." });
         } else {
-          setErrors({ code: "Error al buscar el codigo" });
+          const errorData = await response.json().catch(() => ({}));
+          console.log("Share code lookup error:", errorData);
+          setErrors({ code: errorData.error || "Error al buscar el codigo" });
         }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setIsLoadingShare(false);
@@ -111,15 +120,26 @@ export default function AddChildScreen() {
       }
 
       const codeData = await response.json();
+      console.log("Share code data:", codeData);
+
+      // Check if trying to add own child
+      if (codeData.ownerId === userId) {
+        setErrors({ code: "No puedes agregar tu propio hijo con un codigo" });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setIsLoadingShare(false);
+        return;
+      }
 
       // Add access to this child for the current user
+      console.log("Creating child access for:", { childId: codeData.childId, userId, isReadOnly: codeData.isReadOnly });
       await ChildAccessAPI.create(codeData.childId, userId, codeData.isReadOnly);
+      console.log("Child access created successfully");
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading shared child:", error);
-      setErrors({ code: "Error al cargar el niño compartido" });
+      setErrors({ code: error.message || "Error al cargar el niño compartido" });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsLoadingShare(false);
