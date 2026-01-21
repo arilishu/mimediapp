@@ -303,15 +303,16 @@ const styles = StyleSheet.create({
   },
   codeBox: {
     paddingHorizontal: Spacing["2xl"],
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.xl,
     borderRadius: BorderRadius.md,
     marginTop: Spacing.md,
     marginBottom: Spacing.lg,
   },
   codeText: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: "Nunito_700Bold",
     letterSpacing: 4,
+    lineHeight: 32,
   },
   codeActions: {
     flexDirection: "row",
