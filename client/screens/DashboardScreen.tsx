@@ -293,18 +293,15 @@ const styles = StyleSheet.create({
   childrenGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: Spacing.md,
   },
   childCardWrapper: {
-    width: "48%",
-    marginBottom: Spacing.lg,
+    width: "47%",
+    flexGrow: 1,
+    maxWidth: "48.5%",
   },
-  cardLeft: {
-    marginRight: Spacing.sm,
-  },
-  cardRight: {
-    marginLeft: Spacing.sm,
-  },
+  cardLeft: {},
+  cardRight: {},
   emptyCard: {
     padding: Spacing.xl,
   },
