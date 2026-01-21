@@ -1,11 +1,12 @@
-import React, { useEffect } from "react";
-import { StyleSheet, View, ActivityIndicator } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { StyleSheet, View, ActivityIndicator, Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import {
   useFonts,
   Nunito_400Regular,
@@ -17,6 +18,7 @@ import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
 import { tokenCache } from "@/lib/clerk";
+import { registerForPushNotificationsAsync } from "@/lib/notifications";
 
 import RootStackNavigator from "@/navigation/RootStackNavigator";
 import AuthNavigator from "@/navigation/AuthNavigator";
@@ -34,6 +36,37 @@ if (!clerkPublishableKey) {
 function AuthenticatedApp() {
   const { isSignedIn, isLoaded } = useAuth();
   const { theme } = useTheme();
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const hasRequestedPermissions = useRef(false);
+
+  useEffect(() => {
+    if (isSignedIn && Platform.OS !== "web" && !hasRequestedPermissions.current) {
+      hasRequestedPermissions.current = true;
+      registerForPushNotificationsAsync().then(token => {
+        if (token) {
+          console.log("Push notification token:", token);
+        }
+      });
+
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        console.log("Notification received:", notification);
+      });
+
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log("Notification response:", response);
+      });
+    }
+
+    return () => {
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
+  }, [isSignedIn]);
 
   if (!isLoaded) {
     return (
