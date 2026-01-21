@@ -64,11 +64,16 @@ export interface Vaccine {
 export interface Appointment {
   id: string;
   childId: string;
+  childName?: string;
   doctorId?: string;
   date: string;
   time: string;
   notes?: string;
   createdAt: string;
+}
+
+export interface VaccineWithChild extends Vaccine {
+  childName?: string;
 }
 
 export interface Allergy {

@@ -5,6 +5,7 @@ import type {
   Doctor,
   Medication,
   Vaccine,
+  VaccineWithChild,
   Appointment,
   Allergy,
   PastDisease,
@@ -85,6 +86,9 @@ export const VaccinesAPI = {
   getByChildId: (childId: string) =>
     fetchJson<Vaccine[]>(`/api/vaccines?childId=${childId}`),
   
+  getPendingByUser: (userId: string) =>
+    fetchJson<VaccineWithChild[]>(`/api/vaccines/user/${userId}`),
+  
   create: (data: Omit<Vaccine, "id" | "createdAt">) =>
     fetchJson<Vaccine>("/api/vaccines", {
       method: "POST",
@@ -113,6 +117,9 @@ export const VaccinesAPI = {
 export const AppointmentsAPI = {
   getByChildId: (childId: string) =>
     fetchJson<Appointment[]>(`/api/appointments?childId=${childId}`),
+  
+  getUpcomingByUser: (userId: string) =>
+    fetchJson<Appointment[]>(`/api/appointments/user/${userId}`),
   
   create: (data: Omit<Appointment, "id" | "createdAt">) =>
     fetchJson<Appointment>("/api/appointments", {

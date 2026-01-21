@@ -510,6 +510,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all upcoming appointments for a user (across all their children)
+  app.get("/api/appointments/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      if (!userId) return res.status(400).json({ error: "userId required" });
+
+      const result = await pool.query(
+        `SELECT a.*, c.name as child_name 
+         FROM appointments a
+         JOIN children c ON a.child_id = c.id
+         LEFT JOIN child_access ca ON c.id = ca.child_id AND ca.user_id = $1
+         WHERE (c.owner_id = $1 OR ca.user_id = $1)
+           AND a.date >= CURRENT_DATE
+         ORDER BY a.date ASC, a.time ASC
+         LIMIT 5`,
+        [userId]
+      );
+
+      const appointments = result.rows.map((row) => ({
+        id: row.id,
+        childId: row.child_id,
+        childName: row.child_name,
+        doctorId: row.doctor_id,
+        date: row.date,
+        time: row.time,
+        notes: row.notes,
+        createdAt: row.created_at,
+      }));
+
+      return res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching user appointments:", error);
+      return res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
+  // Get all pending vaccines for a user (across all their children)
+  app.get("/api/vaccines/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      if (!userId) return res.status(400).json({ error: "userId required" });
+
+      const result = await pool.query(
+        `SELECT v.*, c.name as child_name 
+         FROM vaccines v
+         JOIN children c ON v.child_id = c.id
+         LEFT JOIN child_access ca ON c.id = ca.child_id AND ca.user_id = $1
+         WHERE (c.owner_id = $1 OR ca.user_id = $1)
+           AND v.is_applied = false
+         ORDER BY c.name ASC, v.recommended_age ASC
+         LIMIT 5`,
+        [userId]
+      );
+
+      const vaccines = result.rows.map((row) => ({
+        id: row.id,
+        childId: row.child_id,
+        childName: row.child_name,
+        name: row.name,
+        recommendedAge: row.recommended_age,
+        appliedDate: row.applied_date,
+        isApplied: row.is_applied,
+        createdAt: row.created_at,
+      }));
+
+      return res.json(vaccines);
+    } catch (error) {
+      console.error("Error fetching user vaccines:", error);
+      return res.status(500).json({ error: "Failed to fetch vaccines" });
+    }
+  });
+
   // ==================== ALLERGIES ====================
   app.get("/api/allergies", async (req: Request, res: Response) => {
     try {
