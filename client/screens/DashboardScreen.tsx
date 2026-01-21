@@ -3,9 +3,8 @@ import { View, ScrollView, StyleSheet, RefreshControl, Text, Pressable } from "r
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation, useFocusEffect, CompositeNavigationProp } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
@@ -21,12 +20,8 @@ import { ChildrenAPI, AppointmentsAPI, VaccinesAPI } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import type { Child, Appointment, VaccineWithChild } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
-import type { MainTabParamList } from "@/navigation/MainTabNavigator";
 
-type NavigationProp = CompositeNavigationProp<
-  NativeStackNavigationProp<RootStackParamList>,
-  BottomTabNavigationProp<MainTabParamList>
->;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
@@ -34,6 +29,7 @@ export default function DashboardScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const rootNavigation = useNavigation<any>();
   const { userId } = useAuth();
 
   const [children, setChildren] = useState<Child[]>([]);
@@ -147,35 +143,34 @@ export default function DashboardScreen() {
           </Card>
         ) : (
           appointments.map((appointment) => (
-            <Pressable 
+            <Card 
               key={appointment.id}
+              style={styles.appointmentCard}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 navigation.navigate("ChildProfile", { childId: appointment.childId });
               }}
             >
-              <Card style={styles.appointmentCard}>
-                <View style={styles.appointmentRow}>
-                  <View style={[styles.iconContainer, { backgroundColor: theme.primary + "20" }]}>
-                    <Feather name="calendar" size={20} color={theme.primary} />
-                  </View>
-                  <View style={styles.appointmentInfo}>
-                    <Text style={[styles.appointmentChild, { color: theme.text, fontFamily: "Nunito_700Bold" }]}>
-                      {appointment.childName}
-                    </Text>
-                    <Text style={[styles.appointmentDate, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}>
-                      {formatDate(appointment.date)} - {appointment.time}
-                    </Text>
-                    {appointment.notes ? (
-                      <Text style={[styles.appointmentNotes, { color: theme.textDisabled, fontFamily: "Nunito_400Regular" }]} numberOfLines={1}>
-                        {appointment.notes}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Feather name="chevron-right" size={20} color={theme.textDisabled} />
+              <View style={styles.appointmentRow}>
+                <View style={[styles.iconContainer, { backgroundColor: theme.primary + "20" }]}>
+                  <Feather name="calendar" size={20} color={theme.primary} />
                 </View>
-              </Card>
-            </Pressable>
+                <View style={styles.appointmentInfo}>
+                  <Text style={[styles.appointmentChild, { color: theme.text, fontFamily: "Nunito_700Bold" }]}>
+                    {appointment.childName}
+                  </Text>
+                  <Text style={[styles.appointmentDate, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}>
+                    {formatDate(appointment.date)} - {appointment.time}
+                  </Text>
+                  {appointment.notes ? (
+                    <Text style={[styles.appointmentNotes, { color: theme.textDisabled, fontFamily: "Nunito_400Regular" }]} numberOfLines={1}>
+                      {appointment.notes}
+                    </Text>
+                  ) : null}
+                </View>
+                <Feather name="chevron-right" size={20} color={theme.textDisabled} />
+              </View>
+            </Card>
           ))
         )}
       </View>
@@ -201,33 +196,32 @@ export default function DashboardScreen() {
           </Card>
         ) : (
           pendingVaccines.map((vaccine) => (
-            <Pressable 
+            <Card 
               key={vaccine.id} 
+              style={styles.vaccineCard}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate("VaccinesTab", { 
+                rootNavigation.navigate("VaccinesTab", { 
                   screen: "Vaccines", 
                   params: { childId: vaccine.childId } 
                 });
               }}
             >
-              <Card style={styles.vaccineCard}>
-                <View style={styles.vaccineRow}>
-                  <View style={[styles.iconContainer, { backgroundColor: theme.accent + "20" }]}>
-                    <Feather name="shield" size={20} color={theme.accent} />
-                  </View>
-                  <View style={styles.vaccineInfo}>
-                    <Text style={[styles.vaccineName, { color: theme.text, fontFamily: "Nunito_700Bold" }]}>
-                      {vaccine.name}
-                    </Text>
-                    <Text style={[styles.vaccineChild, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}>
-                      {vaccine.childName} - {vaccine.recommendedAge}
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color={theme.textDisabled} />
+              <View style={styles.vaccineRow}>
+                <View style={[styles.iconContainer, { backgroundColor: theme.accent + "20" }]}>
+                  <Feather name="shield" size={20} color={theme.accent} />
                 </View>
-              </Card>
-            </Pressable>
+                <View style={styles.vaccineInfo}>
+                  <Text style={[styles.vaccineName, { color: theme.text, fontFamily: "Nunito_700Bold" }]}>
+                    {vaccine.name}
+                  </Text>
+                  <Text style={[styles.vaccineChild, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}>
+                    {vaccine.childName} - {vaccine.recommendedAge}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={theme.textDisabled} />
+              </View>
+            </Card>
           ))
         )}
       </View>
