@@ -272,11 +272,13 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: BorderRadius.lg,
     padding: Spacing.xl,
+    paddingTop: Spacing["2xl"],
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: Spacing.md,
     marginBottom: Spacing.lg,
   },
   description: {
