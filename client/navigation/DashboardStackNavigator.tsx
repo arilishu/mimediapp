@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Alert } from "react-native";
+import { Pressable, Alert, Platform } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { useClerk } from "@clerk/clerk-expo";
@@ -19,25 +19,33 @@ function SignOutButton() {
   const { theme } = useTheme();
   const { signOut } = useClerk();
 
+  const performSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   const handleSignOut = () => {
-    Alert.alert(
-      "Cerrar Sesión",
-      "¿Estás seguro que deseas cerrar sesión?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Cerrar Sesión",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch (error) {
-              console.error("Error signing out:", error);
-            }
+    if (Platform.OS === "web") {
+      if (window.confirm("¿Estás seguro que deseas cerrar sesión?")) {
+        performSignOut();
+      }
+    } else {
+      Alert.alert(
+        "Cerrar Sesión",
+        "¿Estás seguro que deseas cerrar sesión?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Cerrar Sesión",
+            style: "destructive",
+            onPress: performSignOut,
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
