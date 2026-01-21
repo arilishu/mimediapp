@@ -18,11 +18,12 @@ interface ChildCardProps {
   onPress: () => void;
   onShare?: () => void;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function ChildCard({ child, onPress, onShare, onEdit }: ChildCardProps) {
+export function ChildCard({ child, onPress, onShare, onEdit, onDelete }: ChildCardProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -64,6 +65,14 @@ export function ChildCard({ child, onPress, onShare, onEdit }: ChildCardProps) {
     setMenuVisible(false);
     if (onEdit) {
       onEdit();
+    }
+  };
+
+  const handleDeletePress = () => {
+    setMenuVisible(false);
+    if (onDelete) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      onDelete();
     }
   };
 
@@ -156,10 +165,17 @@ export function ChildCard({ child, onPress, onShare, onEdit }: ChildCardProps) {
             </Pressable>
             <Pressable
               onPress={handleSharePress}
-              style={styles.menuItem}
+              style={[styles.menuItem, { borderBottomWidth: 1, borderBottomColor: theme.border }]}
             >
               <Feather name="share-2" size={20} color={theme.text} />
               <ThemedText type="body">Compartir hijo</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={handleDeletePress}
+              style={styles.menuItem}
+            >
+              <Feather name="trash-2" size={20} color={theme.error} />
+              <ThemedText type="body" style={{ color: theme.error }}>Eliminar hijo</ThemedText>
             </Pressable>
           </View>
         </Pressable>

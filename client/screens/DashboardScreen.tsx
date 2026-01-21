@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, ScrollView, StyleSheet, RefreshControl, Text, Pressable } from "react-native";
+import { View, ScrollView, StyleSheet, RefreshControl, Text, Pressable, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -85,6 +85,30 @@ export default function DashboardScreen() {
     setShareModalVisible(true);
   };
 
+  const handleDeleteChild = (child: Child) => {
+    Alert.alert(
+      "Eliminar Hijo",
+      `¿Estás seguro de eliminar a ${child.name}? Se eliminarán todos sus datos médicos.`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await ChildrenAPI.delete(child.id);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              loadData();
+            } catch (error) {
+              console.error("Error deleting child:", error);
+              Alert.alert("Error", "No se pudo eliminar al hijo. Intenta de nuevo.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderChildrenSection = () => {
     if (children.length === 0 && !isLoading) {
       return (
@@ -117,6 +141,7 @@ export default function DashboardScreen() {
                 onPress={() => handleChildPress(child)}
                 onShare={() => handleShareChild(child)}
                 onEdit={() => navigation.navigate("EditChild", { childId: child.id })}
+                onDelete={() => handleDeleteChild(child)}
               />
             </View>
           ))}
