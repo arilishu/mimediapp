@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Platform, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation } from "@react-navigation/native";
@@ -15,7 +15,8 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { ChildStorage, VaccineStorage, ShareCodeStorage } from "@/lib/storage";
+import { ChildStorage, VaccineStorage } from "@/lib/storage";
+import { getApiUrl } from "@/lib/query-client";
 import { VACCINE_SCHEDULE } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -96,18 +97,27 @@ export default function AddChildScreen() {
     setErrors({});
 
     try {
-      const code = await ShareCodeStorage.getByCode(shareCode.trim());
-      
-      if (!code) {
-        setErrors({ code: "Codigo no encontrado. Verifica e intenta nuevamente." });
+      const apiUrl = getApiUrl();
+      const response = await fetch(
+        new URL(`/api/share-codes/${shareCode.trim()}`, apiUrl).toString()
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          setErrors({ code: "Codigo no encontrado. Verifica e intenta nuevamente." });
+        } else {
+          setErrors({ code: "Error al buscar el codigo" });
+        }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setIsLoadingShare(false);
         return;
       }
 
+      const codeData = await response.json();
+
       const existingChildren = await ChildStorage.getAll();
       const alreadyHasChild = existingChildren.some(
-        (c) => c.sharedFromCode === code.code || c.id === code.childId
+        (c) => c.sharedFromCode === codeData.code
       );
 
       if (alreadyHasChild) {
@@ -117,24 +127,15 @@ export default function AddChildScreen() {
         return;
       }
 
-      const originalChild = await ChildStorage.getById(code.childId);
-      
-      if (!originalChild) {
-        setErrors({ code: "El niño compartido ya no existe" });
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setIsLoadingShare(false);
-        return;
-      }
-
       await ChildStorage.create({
-        name: originalChild.name,
-        birthDate: originalChild.birthDate,
-        sex: originalChild.sex,
-        avatarIndex: originalChild.avatarIndex,
+        name: codeData.childName,
+        birthDate: codeData.childBirthDate,
+        sex: codeData.childSex,
+        avatarIndex: codeData.childAvatarIndex,
         isShared: true,
-        isReadOnly: code.isReadOnly,
-        sharedFromCode: code.code,
-        ownerId: code.ownerId,
+        isReadOnly: codeData.isReadOnly,
+        sharedFromCode: codeData.code,
+        ownerId: codeData.ownerId,
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

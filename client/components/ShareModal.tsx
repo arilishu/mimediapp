@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Modal,
   Pressable,
-  ActivityIndicator,
   Switch,
   Share,
 } from "react-native";
@@ -16,9 +15,18 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { ShareCodeStorage } from "@/lib/storage";
 import { useAuth } from "@clerk/clerk-expo";
-import type { Child, ShareCode } from "@/types";
+import { getApiUrl } from "@/lib/query-client";
+import type { Child } from "@/types";
+
+interface ShareCodeResponse {
+  id: string;
+  code: string;
+  childId: string;
+  ownerId: string;
+  isReadOnly: boolean;
+  createdAt: string;
+}
 
 interface ShareModalProps {
   visible: boolean;
@@ -29,23 +37,35 @@ interface ShareModalProps {
 export function ShareModal({ visible, onClose, child }: ShareModalProps) {
   const { theme } = useTheme();
   const { userId } = useAuth();
-  const [shareCode, setShareCode] = useState<ShareCode | null>(null);
+  const [shareCode, setShareCode] = useState<ShareCodeResponse | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(true);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && userId) {
       loadShareCode();
     }
-  }, [visible]);
+  }, [visible, userId]);
 
   const loadShareCode = async () => {
-    const existingCode = await ShareCodeStorage.getByChildId(child.id);
-    if (existingCode) {
-      setShareCode(existingCode);
-      setIsReadOnly(existingCode.isReadOnly);
-    } else {
+    if (!userId) return;
+    
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(
+        new URL(`/api/share-codes/child/${child.id}?ownerId=${userId}`, apiUrl).toString()
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setShareCode(data);
+        setIsReadOnly(data.isReadOnly);
+      } else {
+        setShareCode(null);
+      }
+    } catch (error) {
+      console.error("Error loading share code:", error);
       setShareCode(null);
     }
   };
@@ -55,13 +75,28 @@ export function ShareModal({ visible, onClose, child }: ShareModalProps) {
     
     setLoading(true);
     try {
-      const code = await ShareCodeStorage.create({
-        childId: child.id,
-        ownerId: userId,
-        isReadOnly,
+      const apiUrl = getApiUrl();
+      const response = await fetch(new URL("/api/share-codes", apiUrl).toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          childId: child.id,
+          ownerId: userId,
+          childName: child.name,
+          childBirthDate: child.birthDate,
+          childSex: child.sex,
+          childAvatarIndex: child.avatarIndex,
+          isReadOnly,
+        }),
       });
-      setShareCode(code);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setShareCode(data);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        throw new Error("Failed to create share code");
+      }
     } catch (error) {
       console.error("Error generating share code:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -72,10 +107,22 @@ export function ShareModal({ visible, onClose, child }: ShareModalProps) {
 
   const handleUpdateReadOnly = async (value: boolean) => {
     setIsReadOnly(value);
-    if (shareCode) {
+    if (shareCode && userId) {
       try {
-        const updated = await ShareCodeStorage.update(child.id, { isReadOnly: value });
-        setShareCode(updated);
+        const apiUrl = getApiUrl();
+        const response = await fetch(
+          new URL(`/api/share-codes/${child.id}`, apiUrl).toString(),
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ownerId: userId, isReadOnly: value }),
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setShareCode(data);
+        }
       } catch (error) {
         console.error("Error updating share code:", error);
       }
@@ -107,8 +154,16 @@ export function ShareModal({ visible, onClose, child }: ShareModalProps) {
   };
 
   const handleDeleteCode = async () => {
+    if (!userId) return;
+    
     try {
-      await ShareCodeStorage.delete(child.id);
+      const apiUrl = getApiUrl();
+      await fetch(new URL(`/api/share-codes/${child.id}`, apiUrl).toString(), {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: userId }),
+      });
+      
       setShareCode(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
