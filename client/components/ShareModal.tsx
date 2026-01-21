@@ -302,6 +302,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing["2xl"],
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.md,
+    marginTop: Spacing.md,
     marginBottom: Spacing.lg,
   },
   codeText: {
