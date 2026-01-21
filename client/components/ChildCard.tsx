@@ -17,11 +17,12 @@ interface ChildCardProps {
   child: Child;
   onPress: () => void;
   onShare?: () => void;
+  onEdit?: () => void;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function ChildCard({ child, onPress, onShare }: ChildCardProps) {
+export function ChildCard({ child, onPress, onShare, onEdit }: ChildCardProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -59,6 +60,13 @@ export function ChildCard({ child, onPress, onShare }: ChildCardProps) {
     }
   };
 
+  const handleEditPress = () => {
+    setMenuVisible(false);
+    if (onEdit) {
+      onEdit();
+    }
+  };
+
   return (
     <>
       <AnimatedPressable
@@ -74,11 +82,15 @@ export function ChildCard({ child, onPress, onShare }: ChildCardProps) {
       >
         {!isShared ? (
           <Pressable
-            onPress={handleMenuPress}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleMenuPress();
+            }}
             style={styles.menuButton}
-            hitSlop={8}
+            hitSlop={16}
+            testID="button-child-menu"
           >
-            <Feather name="more-vertical" size={18} color={theme.textSecondary} />
+            <Feather name="more-vertical" size={20} color={theme.textSecondary} />
           </Pressable>
         ) : null}
 
@@ -135,6 +147,13 @@ export function ChildCard({ child, onPress, onShare }: ChildCardProps) {
           onPress={() => setMenuVisible(false)}
         >
           <View style={[styles.menuContainer, { backgroundColor: theme.backgroundDefault }]}>
+            <Pressable
+              onPress={handleEditPress}
+              style={[styles.menuItem, { borderBottomWidth: 1, borderBottomColor: theme.border }]}
+            >
+              <Feather name="edit-2" size={20} color={theme.text} />
+              <ThemedText type="body">Editar datos</ThemedText>
+            </Pressable>
             <Pressable
               onPress={handleSharePress}
               style={styles.menuItem}

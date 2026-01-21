@@ -116,6 +116,7 @@ export default function DashboardScreen() {
                 child={child}
                 onPress={() => handleChildPress(child)}
                 onShare={() => handleShareChild(child)}
+                onEdit={() => navigation.navigate("EditChild", { childId: child.id })}
               />
             </View>
           ))}
