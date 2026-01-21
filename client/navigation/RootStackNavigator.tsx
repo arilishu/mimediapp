@@ -14,6 +14,7 @@ import AllergiesListScreen from "@/screens/AllergiesListScreen";
 import AddAllergyScreen from "@/screens/AddAllergyScreen";
 import DiseasesListScreen from "@/screens/DiseasesListScreen";
 import AddDiseaseScreen from "@/screens/AddDiseaseScreen";
+import VisitsListScreen from "@/screens/VisitsListScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -21,7 +22,7 @@ export type RootStackParamList = {
   ChildProfile: { childId: string };
   AddChild: undefined;
   EditChild: { childId: string };
-  AddVisit: { childId: string };
+  AddVisit: { childId: string; visitId?: string };
   VisitsList: { childId: string };
   AddAppointment: { childId: string };
   AddHospital: undefined;
@@ -73,7 +74,14 @@ export default function RootStackNavigator() {
         component={AddVisitScreen}
         options={{
           presentation: "modal",
-          headerTitle: "Nueva Visita",
+          headerTitle: "Visita",
+        }}
+      />
+      <Stack.Screen
+        name="VisitsList"
+        component={VisitsListScreen}
+        options={{
+          headerTitle: "Visitas Médicas",
         }}
       />
       <Stack.Screen

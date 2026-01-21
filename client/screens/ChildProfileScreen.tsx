@@ -181,6 +181,7 @@ export default function ChildProfileScreen() {
               key={visit.id}
               visit={visit}
               doctor={doctors[visit.doctorId]}
+              onPress={() => navigation.navigate("VisitsList", { childId })}
             />
           ))
         ) : (

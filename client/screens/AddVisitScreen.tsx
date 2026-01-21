@@ -30,7 +30,9 @@ export default function AddVisitScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { userId } = useAuth();
-  const { childId } = route.params;
+  const { childId, visitId } = route.params;
+
+  const isEditing = !!visitId;
 
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -41,6 +43,7 @@ export default function AddVisitScreen() {
   const [headCircumference, setHeadCircumference] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(isEditing);
 
   const [showNewDoctor, setShowNewDoctor] = useState(false);
   const [newDoctorName, setNewDoctorName] = useState("");
@@ -49,6 +52,31 @@ export default function AddVisitScreen() {
   useEffect(() => {
     loadDoctors();
   }, [userId]);
+
+  useEffect(() => {
+    if (isEditing && visitId) {
+      loadVisit();
+    }
+  }, [visitId]);
+
+  const loadVisit = async () => {
+    try {
+      const visits = await VisitsAPI.getByChildId(childId);
+      const visit = visits.find((v) => v.id === visitId);
+      if (visit) {
+        setDate(new Date(visit.date));
+        setSelectedDoctorId(visit.doctorId || null);
+        setWeight(visit.weight?.toString() || "");
+        setHeight(visit.height?.toString() || "");
+        setHeadCircumference(visit.headCircumference?.toString() || "");
+        setNotes(visit.notes || "");
+      }
+    } catch (error) {
+      console.error("Error loading visit:", error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const loadDoctors = async () => {
     if (!userId) return;
@@ -84,15 +112,26 @@ export default function AddVisitScreen() {
         return;
       }
 
-      await VisitsAPI.create({
-        childId,
-        doctorId,
-        date: date.toISOString(),
-        weight: weight ? parseFloat(weight) : undefined,
-        height: height ? parseFloat(height) : undefined,
-        headCircumference: headCircumference ? parseFloat(headCircumference) : undefined,
-        notes: notes.trim() || undefined,
-      });
+      if (isEditing && visitId) {
+        await VisitsAPI.update(visitId, {
+          doctorId,
+          date: date.toISOString(),
+          weight: weight ? parseFloat(weight) : undefined,
+          height: height ? parseFloat(height) : undefined,
+          headCircumference: headCircumference ? parseFloat(headCircumference) : undefined,
+          notes: notes.trim() || undefined,
+        });
+      } else {
+        await VisitsAPI.create({
+          childId,
+          doctorId,
+          date: date.toISOString(),
+          weight: weight ? parseFloat(weight) : undefined,
+          height: height ? parseFloat(height) : undefined,
+          headCircumference: headCircumference ? parseFloat(headCircumference) : undefined,
+          notes: notes.trim() || undefined,
+        });
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
@@ -131,10 +170,10 @@ export default function AddVisitScreen() {
       ]}
     >
       <ThemedText type="h3" style={styles.title}>
-        Nueva Visita
+        {isEditing ? "Editar Visita" : "Nueva Visita"}
       </ThemedText>
       <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-        Registra los datos de la consulta medica
+        {isEditing ? "Modifica los datos de la consulta" : "Registra los datos de la consulta medica"}
       </ThemedText>
 
       <View style={styles.field}>
@@ -287,7 +326,7 @@ export default function AddVisitScreen() {
         disabled={isSubmitting || (!selectedDoctorId && !newDoctorName.trim())}
         style={styles.submitButton}
       >
-        {isSubmitting ? "Guardando..." : "Guardar Visita"}
+        {isSubmitting ? "Guardando..." : isEditing ? "Guardar Cambios" : "Guardar Visita"}
       </Button>
     </KeyboardAwareScrollViewCompat>
   );
