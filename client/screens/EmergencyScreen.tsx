@@ -6,13 +6,14 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { HospitalCard } from "@/components/HospitalCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { HospitalStorage } from "@/lib/storage";
+import { HospitalsAPI } from "@/lib/api";
 import type { Hospital } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -24,14 +25,17 @@ export default function EmergencyScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { userId } = useAuth();
 
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!userId) return;
+    
     try {
-      const hospitalsData = await HospitalStorage.getAll();
+      const hospitalsData = await HospitalsAPI.getAll(userId);
       setHospitals(hospitalsData);
     } catch (error) {
       console.error("Error loading hospitals:", error);
@@ -39,7 +43,7 @@ export default function EmergencyScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,7 +64,7 @@ export default function EmergencyScreen() {
   const handleDeleteHospital = async (hospitalId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await HospitalStorage.delete(hospitalId);
+      await HospitalsAPI.delete(hospitalId);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       loadData();
     } catch (error) {

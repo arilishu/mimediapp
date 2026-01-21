@@ -15,7 +15,7 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { ChildStorage, VaccineStorage } from "@/lib/storage";
+import { ChildrenAPI, VaccinesAPI, ChildAccessAPI } from "@/lib/api";
 import { getApiUrl } from "@/lib/query-client";
 import { VACCINE_SCHEDULE } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -43,6 +43,8 @@ export default function AddChildScreen() {
   const [isLoadingShare, setIsLoadingShare] = useState(false);
 
   const handleSubmit = async () => {
+    if (!userId) return;
+    
     const newErrors: { name?: string } = {};
 
     if (!name.trim()) {
@@ -59,22 +61,15 @@ export default function AddChildScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const child = await ChildStorage.create({
+      const child = await ChildrenAPI.create({
         name: name.trim(),
         birthDate: birthDate.toISOString(),
         sex,
         avatarIndex: Math.floor(Math.random() * 4),
-        ownerId: userId || undefined,
+        ownerId: userId,
       });
 
-      for (const vaccine of VACCINE_SCHEDULE) {
-        await VaccineStorage.create({
-          childId: child.id,
-          name: vaccine.name,
-          recommendedAge: vaccine.recommendedAge,
-          isApplied: false,
-        });
-      }
+      await VaccinesAPI.createBatch(child.id, VACCINE_SCHEDULE);
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
@@ -87,6 +82,8 @@ export default function AddChildScreen() {
   };
 
   const handleLoadSharedChild = async () => {
+    if (!userId) return;
+    
     if (!shareCode.trim()) {
       setErrors({ code: "Ingresa un codigo de comparticion" });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -115,28 +112,8 @@ export default function AddChildScreen() {
 
       const codeData = await response.json();
 
-      const existingChildren = await ChildStorage.getAll();
-      const alreadyHasChild = existingChildren.some(
-        (c) => c.sharedFromCode === codeData.code
-      );
-
-      if (alreadyHasChild) {
-        setErrors({ code: "Ya tienes acceso a este niño" });
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        setIsLoadingShare(false);
-        return;
-      }
-
-      await ChildStorage.create({
-        name: codeData.childName,
-        birthDate: codeData.childBirthDate,
-        sex: codeData.childSex,
-        avatarIndex: codeData.childAvatarIndex,
-        isShared: true,
-        isReadOnly: codeData.isReadOnly,
-        sharedFromCode: codeData.code,
-        ownerId: codeData.ownerId,
-      });
+      // Add access to this child for the current user
+      await ChildAccessAPI.create(codeData.childId, userId, codeData.isReadOnly);
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();

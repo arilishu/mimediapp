@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
@@ -13,7 +14,7 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { HospitalStorage } from "@/lib/storage";
+import { HospitalsAPI } from "@/lib/api";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -33,6 +34,7 @@ export default function AddHospitalScreen() {
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { userId } = useAuth();
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -51,6 +53,8 @@ export default function AddHospitalScreen() {
   };
 
   const handleSubmit = async () => {
+    if (!userId) return;
+    
     const newErrors: { name?: string; address?: string; phone?: string } = {};
 
     if (!name.trim()) {
@@ -73,11 +77,12 @@ export default function AddHospitalScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      await HospitalStorage.create({
+      await HospitalsAPI.create({
         name: name.trim(),
         address: address.trim(),
         phone: phone.trim(),
         specialties: selectedSpecialties,
+        ownerId: userId,
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

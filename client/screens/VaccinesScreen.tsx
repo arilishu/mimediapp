@@ -5,6 +5,7 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { ThemedText } from "@/components/ThemedText";
 import { VaccineRow } from "@/components/VaccineRow";
@@ -12,7 +13,7 @@ import { ChildSelector } from "@/components/ChildSelector";
 import { EmptyState } from "@/components/EmptyState";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { ChildStorage, VaccineStorage } from "@/lib/storage";
+import { ChildrenAPI, VaccinesAPI } from "@/lib/api";
 import type { Child, Vaccine } from "@/types";
 
 export default function VaccinesScreen() {
@@ -20,6 +21,7 @@ export default function VaccinesScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
+  const { userId } = useAuth();
 
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
@@ -28,8 +30,10 @@ export default function VaccinesScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!userId) return;
+    
     try {
-      const childrenData = await ChildStorage.getAll();
+      const childrenData = await ChildrenAPI.getAll(userId);
       setChildren(childrenData);
 
       if (childrenData.length > 0 && !selectedChildId) {
@@ -41,7 +45,7 @@ export default function VaccinesScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [selectedChildId]);
+  }, [selectedChildId, userId]);
 
   const loadVaccines = useCallback(async () => {
     if (!selectedChildId) {
@@ -50,7 +54,7 @@ export default function VaccinesScreen() {
     }
 
     try {
-      const vaccinesData = await VaccineStorage.getByChildId(selectedChildId);
+      const vaccinesData = await VaccinesAPI.getByChildId(selectedChildId);
       setVaccines(vaccinesData);
     } catch (error) {
       console.error("Error loading vaccines:", error);
@@ -81,7 +85,7 @@ export default function VaccinesScreen() {
       isApplied: !vaccine.isApplied,
       appliedDate: !vaccine.isApplied ? new Date().toISOString() : undefined,
     };
-    await VaccineStorage.update(vaccine.id, updated);
+    await VaccinesAPI.update(vaccine.id, updated);
     loadVaccines();
   };
 
@@ -152,13 +156,6 @@ export default function VaccinesScreen() {
       ) : null}
     </View>
   );
-
-  const renderSeparator = () =>
-    pendingVaccines.length > 0 && appliedVaccines.length > 0 ? (
-      <ThemedText type="h4" style={styles.sectionTitle}>
-        Aplicadas
-      </ThemedText>
-    ) : null;
 
   const sortedVaccines = [...pendingVaccines, ...appliedVaccines];
 

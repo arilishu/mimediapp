@@ -1,18 +1,19 @@
 import React, { useState, useCallback } from "react";
-import { View, FlatList, StyleSheet, RefreshControl, Alert } from "react-native";
+import { View, FlatList, StyleSheet, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { AppointmentCard } from "@/components/AppointmentCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { ChildStorage, AppointmentStorage, DoctorStorage } from "@/lib/storage";
+import { ChildrenAPI, AppointmentsAPI, DoctorsAPI } from "@/lib/api";
 import { isFuture } from "@/lib/utils";
 import type { Child, Appointment, Doctor } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -25,6 +26,7 @@ export default function AppointmentsScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { userId } = useAuth();
 
   const [children, setChildren] = useState<Child[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -34,11 +36,12 @@ export default function AppointmentsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!userId) return;
+    
     try {
-      const [childrenData, appointmentsData, doctorsData] = await Promise.all([
-        ChildStorage.getAll(),
-        AppointmentStorage.getAll(),
-        DoctorStorage.getAll(),
+      const [childrenData, doctorsData] = await Promise.all([
+        ChildrenAPI.getAll(userId),
+        DoctorsAPI.getAll(userId),
       ]);
 
       setChildren(childrenData);
@@ -49,7 +52,14 @@ export default function AppointmentsScreen() {
         doctorsData.reduce((acc, doc) => ({ ...acc, [doc.id]: doc }), {})
       );
 
-      const upcomingAppointments = appointmentsData
+      // Load appointments for all children
+      const allAppointments: Appointment[] = [];
+      for (const child of childrenData) {
+        const childAppointments = await AppointmentsAPI.getByChildId(child.id);
+        allAppointments.push(...childAppointments);
+      }
+
+      const upcomingAppointments = allAppointments
         .filter((a) => isFuture(a.date))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -60,7 +70,7 @@ export default function AppointmentsScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -82,7 +92,7 @@ export default function AppointmentsScreen() {
   const handleDeleteAppointment = async (appointmentId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await AppointmentStorage.delete(appointmentId);
+      await AppointmentsAPI.delete(appointmentId);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       loadData();
     } catch (error) {

@@ -8,6 +8,7 @@ import type { RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
@@ -15,7 +16,7 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { VisitStorage, DoctorStorage } from "@/lib/storage";
+import { VisitsAPI, DoctorsAPI } from "@/lib/api";
 import type { Doctor } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -28,6 +29,7 @@ export default function AddVisitScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
+  const { userId } = useAuth();
   const { childId } = route.params;
 
   const [date, setDate] = useState(new Date());
@@ -46,11 +48,12 @@ export default function AddVisitScreen() {
 
   useEffect(() => {
     loadDoctors();
-  }, []);
+  }, [userId]);
 
   const loadDoctors = async () => {
+    if (!userId) return;
     try {
-      const doctorsData = await DoctorStorage.getAll();
+      const doctorsData = await DoctorsAPI.getAll(userId);
       setDoctors(doctorsData);
     } catch (error) {
       console.error("Error loading doctors:", error);
@@ -58,6 +61,8 @@ export default function AddVisitScreen() {
   };
 
   const handleSubmit = async () => {
+    if (!userId) return;
+    
     setIsSubmitting(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -65,9 +70,10 @@ export default function AddVisitScreen() {
       let doctorId = selectedDoctorId;
 
       if (showNewDoctor && newDoctorName.trim()) {
-        const newDoctor = await DoctorStorage.create({
+        const newDoctor = await DoctorsAPI.create({
           name: newDoctorName.trim(),
           specialty: newDoctorSpecialty.trim() || "Pediatria",
+          ownerId: userId,
         });
         doctorId = newDoctor.id;
       }
@@ -78,7 +84,7 @@ export default function AddVisitScreen() {
         return;
       }
 
-      await VisitStorage.create({
+      await VisitsAPI.create({
         childId,
         doctorId,
         date: date.toISOString(),

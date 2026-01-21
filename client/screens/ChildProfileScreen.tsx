@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { ThemedText } from "@/components/ThemedText";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -16,15 +17,15 @@ import { VaccineRow } from "@/components/VaccineRow";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
 import {
-  ChildStorage,
-  VisitStorage,
-  DoctorStorage,
-  AppointmentStorage,
-  VaccineStorage,
-  MedicationStorage,
-  AllergyStorage,
-  DiseaseStorage,
-} from "@/lib/storage";
+  ChildrenAPI,
+  VisitsAPI,
+  DoctorsAPI,
+  AppointmentsAPI,
+  VaccinesAPI,
+  MedicationsAPI,
+  AllergiesAPI,
+  DiseasesAPI,
+} from "@/lib/api";
 import { calculateAge, getChildTintColor, isFuture } from "@/lib/utils";
 import type { Child, MedicalVisit, Doctor, Appointment, Vaccine, Medication, Allergy, PastDisease } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -38,6 +39,7 @@ export default function ChildProfileScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
+  const { userId } = useAuth();
   const { childId } = route.params;
 
   const [child, setChild] = useState<Child | null>(null);
@@ -50,6 +52,8 @@ export default function ChildProfileScreen() {
   const [diseases, setDiseases] = useState<PastDisease[]>([]);
 
   const loadData = useCallback(async () => {
+    if (!userId) return;
+    
     try {
       const [
         childData,
@@ -61,14 +65,14 @@ export default function ChildProfileScreen() {
         allergiesData,
         diseasesData,
       ] = await Promise.all([
-        ChildStorage.getById(childId),
-        VisitStorage.getByChildId(childId),
-        DoctorStorage.getAll(),
-        AppointmentStorage.getByChildId(childId),
-        VaccineStorage.getByChildId(childId),
-        MedicationStorage.getByChildId(childId),
-        AllergyStorage.getByChildId(childId),
-        DiseaseStorage.getByChildId(childId),
+        ChildrenAPI.getById(childId, userId),
+        VisitsAPI.getByChildId(childId),
+        DoctorsAPI.getAll(userId),
+        AppointmentsAPI.getByChildId(childId),
+        VaccinesAPI.getByChildId(childId),
+        MedicationsAPI.getByChildId(childId),
+        AllergiesAPI.getByChildId(childId),
+        DiseasesAPI.getByChildId(childId),
       ]);
 
       if (childData) {
@@ -86,7 +90,7 @@ export default function ChildProfileScreen() {
     } catch (error) {
       console.error("Error loading child data:", error);
     }
-  }, [childId]);
+  }, [childId, userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -116,7 +120,7 @@ export default function ChildProfileScreen() {
       isApplied: !vaccine.isApplied,
       appliedDate: !vaccine.isApplied ? new Date().toISOString() : undefined,
     };
-    await VaccineStorage.update(vaccine.id, updated);
+    await VaccinesAPI.update(vaccine.id, updated);
     loadData();
   };
 
@@ -145,6 +149,14 @@ export default function ChildProfileScreen() {
         <ThemedText type="body" style={[styles.age, { color: theme.textSecondary }]}>
           {calculateAge(child.birthDate)}
         </ThemedText>
+        {child.isShared ? (
+          <View style={[styles.sharedBadge, { backgroundColor: theme.info + "30" }]}>
+            <Feather name="users" size={14} color={theme.info} />
+            <ThemedText type="small" style={{ color: theme.info }}>
+              {child.isReadOnly ? "Compartido (solo lectura)" : "Compartido"}
+            </ThemedText>
+          </View>
+        ) : null}
       </View>
 
       {nextAppointment ? (
@@ -323,6 +335,15 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   age: {},
+  sharedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+  },
   section: {
     marginBottom: Spacing.md,
   },

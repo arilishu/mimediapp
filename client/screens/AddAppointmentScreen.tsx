@@ -8,6 +8,7 @@ import type { RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
@@ -16,7 +17,7 @@ import { Button } from "@/components/Button";
 import { ChildSelector } from "@/components/ChildSelector";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { AppointmentStorage, DoctorStorage, ChildStorage } from "@/lib/storage";
+import { AppointmentsAPI, DoctorsAPI, ChildrenAPI } from "@/lib/api";
 import type { Doctor, Child } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -29,6 +30,7 @@ export default function AddAppointmentScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
+  const { userId } = useAuth();
   const { childId: initialChildId } = route.params;
 
   const [children, setChildren] = useState<Child[]>([]);
@@ -48,13 +50,14 @@ export default function AddAppointmentScreen() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [userId]);
 
   const loadData = async () => {
+    if (!userId) return;
     try {
       const [childrenData, doctorsData] = await Promise.all([
-        ChildStorage.getAll(),
-        DoctorStorage.getAll(),
+        ChildrenAPI.getAll(userId),
+        DoctorsAPI.getAll(userId),
       ]);
       setChildren(childrenData);
       setDoctors(doctorsData);
@@ -64,6 +67,8 @@ export default function AddAppointmentScreen() {
   };
 
   const handleSubmit = async () => {
+    if (!userId) return;
+    
     setIsSubmitting(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -71,14 +76,15 @@ export default function AddAppointmentScreen() {
       let doctorId = selectedDoctorId;
 
       if (showNewDoctor && newDoctorName.trim()) {
-        const newDoctor = await DoctorStorage.create({
+        const newDoctor = await DoctorsAPI.create({
           name: newDoctorName.trim(),
           specialty: newDoctorSpecialty.trim() || "Pediatria",
+          ownerId: userId,
         });
         doctorId = newDoctor.id;
       }
 
-      await AppointmentStorage.create({
+      await AppointmentsAPI.create({
         childId: selectedChildId,
         doctorId: doctorId || undefined,
         date: date.toISOString(),

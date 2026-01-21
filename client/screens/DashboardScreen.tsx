@@ -6,15 +6,15 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@clerk/clerk-expo";
 
-import { ThemedText } from "@/components/ThemedText";
 import { ChildCard } from "@/components/ChildCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { ShareModal } from "@/components/ShareModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { ChildStorage } from "@/lib/storage";
+import { ChildrenAPI } from "@/lib/api";
 import type { Child } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -26,6 +26,7 @@ export default function DashboardScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { userId } = useAuth();
 
   const [children, setChildren] = useState<Child[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,8 +35,10 @@ export default function DashboardScreen() {
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
 
   const loadChildren = useCallback(async () => {
+    if (!userId) return;
+    
     try {
-      const data = await ChildStorage.getAll();
+      const data = await ChildrenAPI.getAll(userId);
       setChildren(data);
     } catch (error) {
       console.error("Error loading children:", error);
@@ -43,7 +46,7 @@ export default function DashboardScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {

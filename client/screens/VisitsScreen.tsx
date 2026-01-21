@@ -6,6 +6,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "@clerk/clerk-expo";
 
 import { VisitCard } from "@/components/VisitCard";
 import { ChildSelector } from "@/components/ChildSelector";
@@ -13,7 +14,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
-import { ChildStorage, VisitStorage, DoctorStorage } from "@/lib/storage";
+import { ChildrenAPI, VisitsAPI, DoctorsAPI } from "@/lib/api";
 import type { Child, MedicalVisit, Doctor } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -25,6 +26,7 @@ export default function VisitsScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { userId } = useAuth();
 
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
@@ -34,10 +36,12 @@ export default function VisitsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!userId) return;
+    
     try {
       const [childrenData, doctorsData] = await Promise.all([
-        ChildStorage.getAll(),
-        DoctorStorage.getAll(),
+        ChildrenAPI.getAll(userId),
+        DoctorsAPI.getAll(userId),
       ]);
 
       setChildren(childrenData);
@@ -52,7 +56,7 @@ export default function VisitsScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [selectedChildId]);
+  }, [selectedChildId, userId]);
 
   const loadVisits = useCallback(async () => {
     if (!selectedChildId) {
@@ -61,7 +65,7 @@ export default function VisitsScreen() {
     }
 
     try {
-      const visitsData = await VisitStorage.getByChildId(selectedChildId);
+      const visitsData = await VisitsAPI.getByChildId(selectedChildId);
       setVisits(visitsData);
     } catch (error) {
       console.error("Error loading visits:", error);
