@@ -1,7 +1,6 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
-import Constants from "expo-constants";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -36,16 +35,8 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     return null;
   }
 
-  try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-    const token = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
-    return token.data;
-  } catch (error) {
-    console.error("Error getting push token:", error);
-    return null;
-  }
+  console.log("Local notifications permission granted - reminders will work");
+  return "local-notifications-enabled";
 }
 
 export interface ScheduledNotification {
