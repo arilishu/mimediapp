@@ -262,14 +262,15 @@ export default function ChildProfileScreen() {
       <View style={styles.section}>
         <SectionHeader
           title="Alergias"
-          onSeeMore={() => {}}
-          showSeeMore={allergies.length > 3}
+          onSeeMore={() => navigation.navigate("AllergiesList", { childId })}
+          showSeeMore={allergies.length > 0}
         />
         {recentAllergies.length > 0 ? (
           <View style={styles.chips}>
             {recentAllergies.map((allergy) => (
-              <View
+              <Pressable
                 key={allergy.id}
+                onPress={() => navigation.navigate("AllergiesList", { childId })}
                 style={[
                   styles.chip,
                   {
@@ -285,13 +286,19 @@ export default function ChildProfileScreen() {
                 <ThemedText type="small" style={{ fontWeight: "500" }}>
                   {allergy.name}
                 </ThemedText>
-              </View>
+              </Pressable>
             ))}
           </View>
         ) : (
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            No hay alergias registradas
-          </ThemedText>
+          <Pressable
+            onPress={() => navigation.navigate("AddAllergy", { childId })}
+            style={[styles.addCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <Feather name="plus" size={20} color={theme.primary} />
+            <ThemedText type="body" style={{ color: theme.primary }}>
+              Agregar alergia
+            </ThemedText>
+          </Pressable>
         )}
       </View>
 
