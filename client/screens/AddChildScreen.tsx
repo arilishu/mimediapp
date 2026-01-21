@@ -17,6 +17,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { ChildrenAPI, VaccinesAPI, ChildAccessAPI } from "@/lib/api";
 import { getApiUrl } from "@/lib/query-client";
+import { scheduleVaccineReminders } from "@/lib/notifications";
 import { VACCINE_SCHEDULE } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -69,7 +70,21 @@ export default function AddChildScreen() {
         ownerId: userId,
       });
 
-      await VaccinesAPI.createBatch(child.id, VACCINE_SCHEDULE);
+      const vaccines = await VaccinesAPI.createBatch(child.id, VACCINE_SCHEDULE);
+      
+      if (vaccines && Array.isArray(vaccines)) {
+        vaccines.forEach((vaccine) => {
+          if (!vaccine.isApplied) {
+            scheduleVaccineReminders(
+              vaccine.id,
+              vaccine.name,
+              name.trim(),
+              birthDate,
+              vaccine.recommendedAge
+            );
+          }
+        });
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
