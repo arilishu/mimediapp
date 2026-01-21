@@ -24,8 +24,10 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
   - **routes.ts**: API route definitions
 
 ### Data Storage
-- Uses AsyncStorage for local persistence
-- Data models: Children, Medical Visits, Doctors, Medications, Vaccines, Appointments, Allergies, Past Diseases, Hospitals, ShareCodes
+- Uses AsyncStorage for local persistence (device-local data)
+- Uses PostgreSQL database for shared data (share codes)
+- Data models: Children, Medical Visits, Doctors, Medications, Vaccines, Appointments, Allergies, Past Diseases, Hospitals
+- Share codes stored in PostgreSQL to enable cross-device sharing
 
 ## Design System
 - **Primary Color**: #6BA5CF (soft sky blue)
