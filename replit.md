@@ -34,12 +34,20 @@ La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medic
 - **Font**: Nunito (Google Fonts)
 - **Style**: Soft & Trustworthy Medical aesthetic
 
+## Authentication
+- **Provider**: Clerk (@clerk/clerk-expo)
+- **Methods**: Email/Password, Google OAuth SSO
+- **Token Storage**: expo-secure-store
+- **Screens**: SignInScreen, SignUpScreen (with email verification)
+- **Secret**: EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY (required)
+
 ## Key Features
-1. **Dashboard**: View and manage child profiles
-2. **Medical Visits**: Log weight, height, head circumference, doctor visits
-3. **Vaccination Calendar**: Track applied and pending vaccines
-4. **Appointments**: Schedule and manage medical appointments
-5. **Emergency Hospitals**: Quick access to emergency contacts with call/directions
+1. **Authentication**: Secure login with email/password or Google SSO
+2. **Dashboard**: View and manage child profiles
+3. **Medical Visits**: Log weight, height, head circumference, doctor visits
+4. **Vaccination Calendar**: Track applied and pending vaccines
+5. **Appointments**: Schedule and manage medical appointments
+6. **Emergency Hospitals**: Quick access to emergency contacts with call/directions
 
 ## Running the App
 - Frontend runs on port 8081 (Expo)
