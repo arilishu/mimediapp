@@ -134,7 +134,7 @@ export default function SignUpScreen({ navigation }: Props) {
         >
           <View style={styles.header}>
             <Image
-              source={require("@assets/images/app-icon.png")}
+              source={require("../../assets/images/icon.png")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -197,7 +197,7 @@ export default function SignUpScreen({ navigation }: Props) {
       >
         <View style={styles.header}>
           <Image
-            source={require("@assets/images/app-icon.png")}
+            source={require("../../assets/images/icon.png")}
             style={styles.logo}
             resizeMode="contain"
           />
