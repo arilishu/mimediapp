@@ -138,7 +138,7 @@ export default function DiseasesListScreen() {
     <EmptyState
       image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
       title="Sin enfermedades previas"
-      subtitle="Registra las enfermedades que tu hijo tuvo"
+      subtitle="Registra las enfermedades que el familiar tuvo"
     />
   );
 

@@ -160,7 +160,7 @@ export default function VisitsListScreen() {
     <EmptyState
       image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
       title="Sin visitas médicas"
-      subtitle="Registra las consultas médicas de tu hijo"
+      subtitle="Registra las consultas médicas del familiar"
     />
   );
 

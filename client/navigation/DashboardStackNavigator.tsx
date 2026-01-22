@@ -21,7 +21,7 @@ export default function DashboardStackNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          headerTitle: () => <HeaderTitle title="Mis Niños" />,
+          headerTitle: () => <HeaderTitle title="Mis Familiares" />,
           headerRight: () => <UserAvatarMenu />,
         }}
       />

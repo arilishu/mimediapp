@@ -162,8 +162,8 @@ export default function VaccinesScreen() {
       return (
         <EmptyState
           image={require("../../assets/images/illustrations/empty_children_teddy_bear.png")}
-          title="Agrega un niño primero"
-          subtitle="Para ver el calendario de vacunas necesitas agregar un niño"
+          title="Agrega un familiar primero"
+          subtitle="Para ver el calendario de vacunas necesitas agregar un familiar"
         />
       );
     }
@@ -172,7 +172,7 @@ export default function VaccinesScreen() {
       <EmptyState
         image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
         title="Sin vacunas registradas"
-        subtitle="Las vacunas se agregan automaticamente al crear un niño"
+        subtitle="Las vacunas se agregan automaticamente al crear un familiar"
       />
     );
   };

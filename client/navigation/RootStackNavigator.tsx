@@ -62,7 +62,7 @@ export default function RootStackNavigator() {
         component={AddChildScreen}
         options={{
           presentation: "modal",
-          headerTitle: "Nuevo Niño",
+          headerTitle: "Nuevo Familiar",
         }}
       />
       <Stack.Screen
@@ -70,7 +70,7 @@ export default function RootStackNavigator() {
         component={EditChildScreen}
         options={{
           presentation: "modal",
-          headerTitle: "Editar Niño",
+          headerTitle: "Editar Familiar",
         }}
       />
       <Stack.Screen

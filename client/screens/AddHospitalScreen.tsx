@@ -115,7 +115,7 @@ export default function AddHospitalScreen() {
 
       <Input
         label="Nombre"
-        placeholder="Hospital de Niños"
+        placeholder="Ej: Hospital General"
         value={name}
         onChangeText={(text) => {
           setName(text);

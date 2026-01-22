@@ -223,7 +223,7 @@ export default function AddAppointmentScreen() {
       {children.length > 1 ? (
         <View style={styles.field}>
           <ThemedText type="small" style={styles.label}>
-            Niño
+            Familiar
           </ThemedText>
           <ChildSelector
             children={children}

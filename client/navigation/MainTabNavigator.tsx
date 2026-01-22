@@ -50,7 +50,7 @@ export default function MainTabNavigator() {
         name="DashboardTab"
         component={DashboardStackNavigator}
         options={{
-          title: "Niños",
+          title: "Familiares",
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),

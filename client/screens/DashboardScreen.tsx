@@ -93,9 +93,9 @@ export default function DashboardScreen() {
     } catch (error) {
       console.error("Error deleting child:", error);
       if (Platform.OS === "web") {
-        window.alert("No se pudo eliminar al hijo. Intenta de nuevo.");
+        window.alert("No se pudo eliminar al familiar. Intenta de nuevo.");
       } else {
-        Alert.alert("Error", "No se pudo eliminar al hijo. Intenta de nuevo.");
+        Alert.alert("Error", "No se pudo eliminar al familiar. Intenta de nuevo.");
       }
     }
   };
@@ -109,7 +109,7 @@ export default function DashboardScreen() {
       }
     } else {
       Alert.alert(
-        "Eliminar Hijo",
+        "Eliminar Familiar",
         message,
         [
           { text: "Cancelar", style: "cancel" },
@@ -128,9 +128,9 @@ export default function DashboardScreen() {
       return (
         <EmptyState
           image={require("../../assets/images/illustrations/empty_children_teddy_bear.png")}
-          title="Agrega tu primer hijo"
-          subtitle="Comienza a registrar la informacion medica de tus hijos"
-          buttonText="Agregar Nino"
+          title="Agrega tu primer familiar"
+          subtitle="Comienza a registrar la informacion medica de tu familia"
+          buttonText="Agregar Familiar"
           onButtonPress={handleAddChild}
         />
       );
@@ -139,7 +139,7 @@ export default function DashboardScreen() {
     return (
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.text, fontFamily: "Nunito_700Bold" }]}>
-          Mis Hijos
+          Mis Familiares
         </Text>
         <View style={styles.childrenGrid}>
           {children.map((child, index) => (

@@ -130,7 +130,7 @@ export default function AddDoctorScreen() {
         </ThemedText>
 
         <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Los médicos se comparten entre todos tus hijos
+          Los médicos se comparten entre todos tus familiares
         </ThemedText>
 
         <View style={styles.form}>

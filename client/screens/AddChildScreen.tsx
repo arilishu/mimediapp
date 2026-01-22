@@ -139,7 +139,7 @@ export default function AddChildScreen() {
 
       // Check if trying to add own child
       if (codeData.ownerId === userId) {
-        setErrors({ code: "No puedes agregar tu propio hijo con un codigo" });
+        setErrors({ code: "No puedes agregar tu propio familiar con un codigo" });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setIsLoadingShare(false);
         return;
@@ -154,7 +154,7 @@ export default function AddChildScreen() {
       navigation.goBack();
     } catch (error: any) {
       console.error("Error loading shared child:", error);
-      setErrors({ code: error.message || "Error al cargar el niño compartido" });
+      setErrors({ code: error.message || "Error al cargar el familiar compartido" });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsLoadingShare(false);
@@ -239,15 +239,15 @@ export default function AddChildScreen() {
       {mode === "new" ? (
         <>
           <ThemedText type="h3" style={styles.title}>
-            Nuevo Niño
+            Nuevo Familiar
           </ThemedText>
           <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Ingresa los datos basicos de tu hijo
+            Ingresa los datos basicos del familiar
           </ThemedText>
 
           <Input
             label="Nombre"
-            placeholder="Nombre del niño"
+            placeholder="Nombre del familiar"
             value={name}
             onChangeText={(text) => {
               setName(text);
@@ -310,7 +310,7 @@ export default function AddChildScreen() {
                   type="body"
                   style={{ color: sex === "male" ? "#FFFFFF" : theme.text }}
                 >
-                  Niño
+                  Masculino
                 </ThemedText>
               </Pressable>
               <Pressable
@@ -333,7 +333,7 @@ export default function AddChildScreen() {
                   type="body"
                   style={{ color: sex === "female" ? "#FFFFFF" : theme.text }}
                 >
-                  Niña
+                  Femenino
                 </ThemedText>
               </Pressable>
             </View>
@@ -350,10 +350,10 @@ export default function AddChildScreen() {
       ) : (
         <>
           <ThemedText type="h3" style={styles.title}>
-            Cargar Niño Compartido
+            Cargar Familiar Compartido
           </ThemedText>
           <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Ingresa el codigo que te compartieron para agregar al niño
+            Ingresa el codigo que te compartieron para agregar al familiar
           </ThemedText>
 
           <Input
@@ -381,7 +381,7 @@ export default function AddChildScreen() {
             disabled={isLoadingShare}
             style={styles.submitButton}
           >
-            {isLoadingShare ? "Cargando..." : "Cargar Niño"}
+            {isLoadingShare ? "Cargando..." : "Cargar Familiar"}
           </Button>
         </>
       )}

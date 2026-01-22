@@ -168,14 +168,14 @@ export function ChildCard({ child, onPress, onShare, onEdit, onDelete }: ChildCa
               style={[styles.menuItem, { borderBottomWidth: 1, borderBottomColor: theme.border }]}
             >
               <Feather name="share-2" size={20} color={theme.text} />
-              <ThemedText type="body">Compartir hijo</ThemedText>
+              <ThemedText type="body">Compartir familiar</ThemedText>
             </Pressable>
             <Pressable
               onPress={handleDeletePress}
               style={styles.menuItem}
             >
               <Feather name="trash-2" size={20} color={theme.error} />
-              <ThemedText type="body" style={{ color: theme.error }}>Eliminar hijo</ThemedText>
+              <ThemedText type="body" style={{ color: theme.error }}>Eliminar familiar</ThemedText>
             </Pressable>
           </View>
         </Pressable>

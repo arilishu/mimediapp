@@ -128,12 +128,12 @@ export default function EditChildScreen() {
         Editar Datos
       </ThemedText>
       <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-        Modifica los datos de tu hijo
+        Modifica los datos del familiar
       </ThemedText>
 
       <Input
         label="Nombre"
-        placeholder="Nombre del niño"
+        placeholder="Nombre del familiar"
         value={name}
         onChangeText={(text) => {
           setName(text);
@@ -196,7 +196,7 @@ export default function EditChildScreen() {
               type="body"
               style={{ color: sex === "male" ? "#FFFFFF" : theme.text }}
             >
-              Niño
+              Masculino
             </ThemedText>
           </Pressable>
           <Pressable
@@ -219,7 +219,7 @@ export default function EditChildScreen() {
               type="body"
               style={{ color: sex === "female" ? "#FFFFFF" : theme.text }}
             >
-              Niña
+              Femenino
             </ThemedText>
           </Pressable>
         </View>

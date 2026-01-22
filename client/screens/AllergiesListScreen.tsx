@@ -148,7 +148,7 @@ export default function AllergiesListScreen() {
     <EmptyState
       image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
       title="Sin alergias"
-      subtitle="Registra las alergias conocidas de tu hijo"
+      subtitle="Registra las alergias conocidas del familiar"
     />
   );
 

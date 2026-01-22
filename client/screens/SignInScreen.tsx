@@ -114,7 +114,7 @@ export default function SignInScreen({ navigation }: Props) {
           />
           <ThemedText style={styles.title}>MiMediApp</ThemedText>
           <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Gestiona la salud de tus hijos
+            Gestiona la salud de tu familia
           </ThemedText>
         </View>
 

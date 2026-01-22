@@ -109,8 +109,8 @@ export default function VisitsScreen() {
       return (
         <EmptyState
           image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
-          title="Agrega un niño primero"
-          subtitle="Para registrar visitas medicas necesitas agregar un niño"
+          title="Agrega un familiar primero"
+          subtitle="Para registrar visitas medicas necesitas agregar un familiar"
         />
       );
     }

@@ -115,8 +115,8 @@ export default function AppointmentsScreen() {
       return (
         <EmptyState
           image={require("../../assets/images/illustrations/empty_appointments_clock_checkmark.png")}
-          title="Agrega un niño primero"
-          subtitle="Para agendar turnos medicos necesitas agregar un niño"
+          title="Agrega un familiar primero"
+          subtitle="Para agendar turnos medicos necesitas agregar un familiar"
         />
       );
     }
