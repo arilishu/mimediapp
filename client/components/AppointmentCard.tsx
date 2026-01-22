@@ -69,18 +69,18 @@ export function AppointmentCard({
     };
     
     const title = encodeURIComponent(
-      `Turno${doctor ? ` - Dr. ${doctor.name}` : ""}${child ? ` (${child.name})` : ""}`
+      doctor ? `Turno con: ${doctor.name}` : "Turno médico"
     );
     const dates = `${formatGoogleDate(appointmentDate)}/${formatGoogleDate(endDate)}`;
     const details = encodeURIComponent(
       [
         doctor?.specialty ? `Especialidad: ${doctor.specialty}` : "",
+        child ? `Familiar: ${child.name}` : "",
         appointment.notes ? `Notas: ${appointment.notes}` : "",
       ].filter(Boolean).join("\n")
     );
-    const location = encodeURIComponent(doctor?.address || "");
     
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
     
     Linking.openURL(url);
   };
