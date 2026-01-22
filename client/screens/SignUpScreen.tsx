@@ -203,7 +203,7 @@ export default function SignUpScreen({ navigation }: Props) {
           />
           <ThemedText style={styles.title}>Crear cuenta</ThemedText>
           <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Únete a MiPediApp
+            Únete a MiMediApp
           </ThemedText>
         </View>
 

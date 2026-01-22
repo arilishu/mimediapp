@@ -1,7 +1,7 @@
-# MiPediApp - Gestion de Salud Infantil
+# MiMediApp - Gestion de Salud Infantil
 
 ## Overview
-MiPediApp es una aplicacion movil (Android e iOS) desarrollada con Expo (React Native) que permite a padres y cuidadores gestionar y consultar informacion medica pediatrica desde un unico lugar seguro.
+MiMediApp es una aplicacion movil (Android e iOS) desarrollada con Expo (React Native) que permite a padres y cuidadores gestionar y consultar informacion medica pediatrica desde un unico lugar seguro.
 
 La aplicacion centraliza datos clave de salud infantil, incluyendo visitas medicas, vacunas, medicamentos, alergias, enfermedades previas y turnos medicos.
 

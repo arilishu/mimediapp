@@ -112,7 +112,7 @@ export default function SignInScreen({ navigation }: Props) {
             style={styles.logo}
             resizeMode="contain"
           />
-          <ThemedText style={styles.title}>MiPediApp</ThemedText>
+          <ThemedText style={styles.title}>MiMediApp</ThemedText>
           <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
             Gestiona la salud de tus hijos
           </ThemedText>

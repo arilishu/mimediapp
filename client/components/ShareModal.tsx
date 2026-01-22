@@ -142,7 +142,7 @@ export function ShareModal({ visible, onClose, child }: ShareModalProps) {
   const handleShare = async () => {
     if (!shareCode) return;
 
-    const message = `Te comparto el acceso a ${child.name} en MiPediApp.\n\nCodigo: ${shareCode.code}\n\n${isReadOnly ? "(Solo lectura)" : "(Lectura y escritura)"}`;
+    const message = `Te comparto el acceso a ${child.name} en MiMediApp.\n\nCodigo: ${shareCode.code}\n\n${isReadOnly ? "(Solo lectura)" : "(Lectura y escritura)"}`;
     
     try {
       await Share.share({
