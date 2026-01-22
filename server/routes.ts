@@ -157,6 +157,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/children/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
+      
+      // Delete all related data first
+      await pool.query("DELETE FROM medical_visits WHERE child_id = $1", [id]);
+      await pool.query("DELETE FROM vaccines WHERE child_id = $1", [id]);
+      await pool.query("DELETE FROM appointments WHERE child_id = $1", [id]);
+      await pool.query("DELETE FROM allergies WHERE child_id = $1", [id]);
+      await pool.query("DELETE FROM past_diseases WHERE child_id = $1", [id]);
+      await pool.query("DELETE FROM medications WHERE child_id = $1", [id]);
+      await pool.query("DELETE FROM share_codes WHERE child_id = $1", [id]);
+      await pool.query("DELETE FROM child_access WHERE child_id = $1", [id]);
+      
+      // Finally delete the child
       await pool.query("DELETE FROM children WHERE id = $1", [id]);
       return res.json({ success: true });
     } catch (error) {

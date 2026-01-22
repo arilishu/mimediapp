@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, ScrollView, StyleSheet, RefreshControl, Text, Pressable, Alert } from "react-native";
+import { View, ScrollView, StyleSheet, RefreshControl, Text, Pressable, Alert, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -85,28 +85,42 @@ export default function DashboardScreen() {
     setShareModalVisible(true);
   };
 
+  const performDeleteChild = async (child: Child) => {
+    try {
+      await ChildrenAPI.delete(child.id);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      loadData();
+    } catch (error) {
+      console.error("Error deleting child:", error);
+      if (Platform.OS === "web") {
+        window.alert("No se pudo eliminar al hijo. Intenta de nuevo.");
+      } else {
+        Alert.alert("Error", "No se pudo eliminar al hijo. Intenta de nuevo.");
+      }
+    }
+  };
+
   const handleDeleteChild = (child: Child) => {
-    Alert.alert(
-      "Eliminar Hijo",
-      `¿Estás seguro de eliminar a ${child.name}? Se eliminarán todos sus datos médicos.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await ChildrenAPI.delete(child.id);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              loadData();
-            } catch (error) {
-              console.error("Error deleting child:", error);
-              Alert.alert("Error", "No se pudo eliminar al hijo. Intenta de nuevo.");
-            }
+    const message = `¿Estás seguro de eliminar a ${child.name}? Se eliminarán todos sus datos médicos.`;
+    
+    if (Platform.OS === "web") {
+      if (window.confirm(message)) {
+        performDeleteChild(child);
+      }
+    } else {
+      Alert.alert(
+        "Eliminar Hijo",
+        message,
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Eliminar",
+            style: "destructive",
+            onPress: () => performDeleteChild(child),
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const renderChildrenSection = () => {
