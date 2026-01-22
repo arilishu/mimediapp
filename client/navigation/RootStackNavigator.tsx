@@ -26,7 +26,7 @@ export type RootStackParamList = {
   EditChild: { childId: string };
   AddVisit: { childId: string; visitId?: string };
   VisitsList: { childId: string };
-  AddAppointment: { childId: string };
+  AddAppointment: { childId: string; appointmentId?: string };
   AddHospital: undefined;
   MedicationsList: { childId: string };
   AddMedication: { childId: string; medicationId?: string };

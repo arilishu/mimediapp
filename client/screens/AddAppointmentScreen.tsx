@@ -19,7 +19,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { AppointmentsAPI, DoctorsAPI, ChildrenAPI } from "@/lib/api";
 import { scheduleAppointmentReminders } from "@/lib/notifications";
-import type { Doctor, Child } from "@/types";
+import type { Doctor, Child, Appointment } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -32,7 +32,8 @@ export default function AddAppointmentScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { userId } = useAuth();
-  const { childId: initialChildId } = route.params;
+  const { childId: initialChildId, appointmentId } = route.params;
+  const isEditing = !!appointmentId;
 
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string>(initialChildId);
@@ -44,6 +45,7 @@ export default function AddAppointmentScreen() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditing);
 
   const [showNewDoctor, setShowNewDoctor] = useState(false);
   const [newDoctorName, setNewDoctorName] = useState("");
@@ -62,8 +64,21 @@ export default function AddAppointmentScreen() {
       ]);
       setChildren(childrenData);
       setDoctors(doctorsData);
+
+      if (isEditing && appointmentId) {
+        const appointments = await AppointmentsAPI.getByChildId(initialChildId);
+        const appointment = appointments.find((a: Appointment) => a.id === appointmentId);
+        if (appointment) {
+          setDate(new Date(appointment.date));
+          setTime(appointment.time);
+          setSelectedDoctorId(appointment.doctorId || null);
+          setNotes(appointment.notes || "");
+        }
+      }
     } catch (error) {
       console.error("Error loading data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,30 +100,39 @@ export default function AddAppointmentScreen() {
         doctorId = newDoctor.id;
       }
 
-      const appointment = await AppointmentsAPI.create({
-        childId: selectedChildId,
-        doctorId: doctorId || undefined,
-        date: date.toISOString(),
-        time,
-        notes: notes.trim() || undefined,
-      });
+      if (isEditing && appointmentId) {
+        await AppointmentsAPI.update(appointmentId, {
+          doctorId: doctorId || undefined,
+          date: date.toISOString(),
+          time,
+          notes: notes.trim() || undefined,
+        });
+      } else {
+        const appointment = await AppointmentsAPI.create({
+          childId: selectedChildId,
+          doctorId: doctorId || undefined,
+          date: date.toISOString(),
+          time,
+          notes: notes.trim() || undefined,
+        });
 
-      const selectedChild = children.find(c => c.id === selectedChildId);
-      const selectedDoctor = doctors.find(d => d.id === doctorId);
-      
-      if (selectedChild && appointment.id) {
-        scheduleAppointmentReminders(
-          appointment.id,
-          selectedChild.name,
-          date,
-          selectedDoctor?.specialty
-        );
+        const selectedChild = children.find(c => c.id === selectedChildId);
+        const selectedDoctor = doctors.find(d => d.id === doctorId);
+        
+        if (selectedChild && appointment.id) {
+          scheduleAppointmentReminders(
+            appointment.id,
+            selectedChild.name,
+            date,
+            selectedDoctor?.specialty
+          );
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
     } catch (error) {
-      console.error("Error creating appointment:", error);
+      console.error("Error saving appointment:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsSubmitting(false);
@@ -158,10 +182,10 @@ export default function AddAppointmentScreen() {
       ]}
     >
       <ThemedText type="h3" style={styles.title}>
-        Nuevo Turno
+        {isEditing ? "Editar Turno" : "Nuevo Turno"}
       </ThemedText>
       <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-        Agenda una cita medica
+        {isEditing ? "Modifica los datos del turno" : "Agenda una cita medica"}
       </ThemedText>
 
       {children.length > 1 ? (
@@ -322,7 +346,7 @@ export default function AddAppointmentScreen() {
         disabled={isSubmitting}
         style={styles.submitButton}
       >
-        {isSubmitting ? "Guardando..." : "Agendar Turno"}
+        {isSubmitting ? "Guardando..." : isEditing ? "Guardar Cambios" : "Agendar Turno"}
       </Button>
     </KeyboardAwareScrollViewCompat>
   );

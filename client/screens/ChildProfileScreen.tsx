@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, ScrollView, StyleSheet, Pressable } from "react-native";
+import { View, ScrollView, StyleSheet, Pressable, Alert, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
@@ -119,6 +119,43 @@ export default function ChildProfileScreen() {
     navigation.navigate("AddAppointment", { childId });
   };
 
+  const handleDeleteAppointment = async (appointment: Appointment) => {
+    const message = `¿Eliminar el turno del ${formatDate(appointment.date)}?`;
+    
+    if (Platform.OS === "web") {
+      if (window.confirm(message)) {
+        try {
+          await AppointmentsAPI.delete(appointment.id);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          loadData();
+        } catch (error) {
+          console.error("Error deleting appointment:", error);
+        }
+      }
+    } else {
+      Alert.alert(
+        "Eliminar Turno",
+        message,
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Eliminar",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await AppointmentsAPI.delete(appointment.id);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                loadData();
+              } catch (error) {
+                console.error("Error deleting appointment:", error);
+              }
+            },
+          },
+        ]
+      );
+    }
+  };
+
   const handleToggleVaccine = async (vaccine: Vaccine) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const updated = {
@@ -175,6 +212,8 @@ export default function ChildProfileScreen() {
               key={appointment.id}
               appointment={appointment}
               doctor={appointment.doctorId ? doctors[appointment.doctorId] : undefined}
+              onPress={() => navigation.navigate("AddAppointment", { childId, appointmentId: appointment.id })}
+              onDelete={() => handleDeleteAppointment(appointment)}
             />
           ))
         ) : (
