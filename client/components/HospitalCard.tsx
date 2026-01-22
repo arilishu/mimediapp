@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet, Pressable, Linking, Platform } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, Pressable, Linking, Platform, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -27,6 +27,7 @@ export function HospitalCard({
 }: HospitalCardProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
+  const [showMapsModal, setShowMapsModal] = useState(false);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -52,13 +53,36 @@ export function HospitalCard({
 
   const handleDirections = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS === "web") {
+      const encodedAddress = encodeURIComponent(hospital.address);
+      Linking.openURL(`https://maps.google.com/?q=${encodedAddress}`);
+    } else {
+      setShowMapsModal(true);
+    }
+  };
+
+  const openGoogleMaps = () => {
+    setShowMapsModal(false);
     const encodedAddress = encodeURIComponent(hospital.address);
-    const mapsUrl = Platform.select({
-      ios: `maps:?q=${encodedAddress}`,
-      android: `geo:0,0?q=${encodedAddress}`,
+    const url = Platform.select({
+      ios: `comgooglemaps://?q=${encodedAddress}`,
+      android: `google.navigation:q=${encodedAddress}`,
       default: `https://maps.google.com/?q=${encodedAddress}`,
     });
-    Linking.openURL(mapsUrl);
+    Linking.canOpenURL(url!).then((supported) => {
+      if (supported) {
+        Linking.openURL(url!);
+      } else {
+        Linking.openURL(`https://maps.google.com/?q=${encodedAddress}`);
+      }
+    });
+  };
+
+  const openWaze = () => {
+    setShowMapsModal(false);
+    const encodedAddress = encodeURIComponent(hospital.address);
+    const url = `https://waze.com/ul?q=${encodedAddress}&navigate=yes`;
+    Linking.openURL(url);
   };
 
   return (
@@ -158,6 +182,59 @@ export function HospitalCard({
           </ThemedText>
         </Pressable>
       </View>
+
+      <Modal
+        visible={showMapsModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMapsModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowMapsModal(false)}
+        >
+          <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
+            <ThemedText type="h4" style={styles.modalTitle}>
+              Abrir con
+            </ThemedText>
+            <Pressable
+              onPress={openGoogleMaps}
+              style={({ pressed }) => [
+                styles.modalOption,
+                { backgroundColor: pressed ? theme.primary + "10" : "transparent" },
+              ]}
+            >
+              <View style={[styles.modalIconContainer, { backgroundColor: "#4285F4" + "20" }]}>
+                <Feather name="map" size={20} color="#4285F4" />
+              </View>
+              <ThemedText type="body">Google Maps</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={openWaze}
+              style={({ pressed }) => [
+                styles.modalOption,
+                { backgroundColor: pressed ? theme.primary + "10" : "transparent" },
+              ]}
+            >
+              <View style={[styles.modalIconContainer, { backgroundColor: "#33CCFF" + "20" }]}>
+                <Feather name="navigation" size={20} color="#33CCFF" />
+              </View>
+              <ThemedText type="body">Waze</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => setShowMapsModal(false)}
+              style={({ pressed }) => [
+                styles.cancelButton,
+                { backgroundColor: pressed ? theme.textSecondary + "10" : "transparent" },
+              ]}
+            >
+              <ThemedText type="body" style={{ color: theme.textSecondary }}>
+                Cancelar
+              </ThemedText>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </AnimatedPressable>
   );
 }
@@ -224,5 +301,42 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 320,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+  },
+  modalTitle: {
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    gap: Spacing.md,
+  },
+  modalIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButton: {
+    alignItems: "center",
+    padding: Spacing.md,
+    marginTop: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
 });
