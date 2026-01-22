@@ -180,7 +180,7 @@ export default function ChildProfileScreen() {
       <View style={[styles.header, { backgroundColor: tintColor }]}>
         <View style={[styles.avatarContainer, { backgroundColor: theme.backgroundDefault }]}>
           <Feather
-            name={child.sex === "male" ? "user" : "user"}
+            name="user"
             size={40}
             color={theme.primary}
           />

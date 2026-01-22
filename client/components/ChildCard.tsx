@@ -111,7 +111,7 @@ export function ChildCard({ child, onPress, onShare, onEdit, onDelete }: ChildCa
 
         <View style={[styles.avatarContainer, { backgroundColor: theme.backgroundDefault }]}>
           <Feather 
-            name={child.sex === "male" ? "user" : "user"} 
+            name="user" 
             size={32} 
             color={theme.primary} 
           />

@@ -171,60 +171,6 @@ export default function EditChildScreen() {
         />
       ) : null}
 
-      <View style={styles.field}>
-        <ThemedText type="small" style={styles.label}>
-          Sexo
-        </ThemedText>
-        <View style={styles.sexButtons}>
-          <Pressable
-            onPress={() => setSex("male")}
-            style={[
-              styles.sexButton,
-              {
-                backgroundColor:
-                  sex === "male" ? theme.primary : theme.backgroundDefault,
-                borderColor: sex === "male" ? theme.primary : theme.border,
-              },
-            ]}
-          >
-            <Feather
-              name="user"
-              size={20}
-              color={sex === "male" ? "#FFFFFF" : theme.textSecondary}
-            />
-            <ThemedText
-              type="body"
-              style={{ color: sex === "male" ? "#FFFFFF" : theme.text }}
-            >
-              Masculino
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={() => setSex("female")}
-            style={[
-              styles.sexButton,
-              {
-                backgroundColor:
-                  sex === "female" ? theme.primary : theme.backgroundDefault,
-                borderColor: sex === "female" ? theme.primary : theme.border,
-              },
-            ]}
-          >
-            <Feather
-              name="user"
-              size={20}
-              color={sex === "female" ? "#FFFFFF" : theme.textSecondary}
-            />
-            <ThemedText
-              type="body"
-              style={{ color: sex === "female" ? "#FFFFFF" : theme.text }}
-            >
-              Femenino
-            </ThemedText>
-          </Pressable>
-        </View>
-      </View>
-
       <Button
         onPress={handleSubmit}
         disabled={isSubmitting}
@@ -272,20 +218,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     flex: 1,
-  },
-  sexButtons: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  sexButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-    height: Spacing.inputHeight,
-    borderRadius: BorderRadius.xs,
-    borderWidth: 1.5,
   },
   submitButton: {
     marginTop: Spacing.xl,
