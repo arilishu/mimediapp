@@ -1,11 +1,12 @@
 import React from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Linking } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
@@ -52,6 +53,37 @@ export function AppointmentCard({
     : isUpcoming
     ? theme.primary
     : theme.textSecondary;
+
+  const handleAddToGoogleCalendar = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    const appointmentDate = new Date(appointment.date);
+    const [hours, minutes] = appointment.time.split(":").map(Number);
+    appointmentDate.setHours(hours || 9, minutes || 0, 0, 0);
+    
+    const endDate = new Date(appointmentDate);
+    endDate.setHours(endDate.getHours() + 1);
+    
+    const formatGoogleDate = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    };
+    
+    const title = encodeURIComponent(
+      `Turno${doctor ? ` - Dr. ${doctor.name}` : ""}${child ? ` (${child.name})` : ""}`
+    );
+    const dates = `${formatGoogleDate(appointmentDate)}/${formatGoogleDate(endDate)}`;
+    const details = encodeURIComponent(
+      [
+        doctor?.specialty ? `Especialidad: ${doctor.specialty}` : "",
+        appointment.notes ? `Notas: ${appointment.notes}` : "",
+      ].filter(Boolean).join("\n")
+    );
+    const location = encodeURIComponent(doctor?.address || "");
+    
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+    
+    Linking.openURL(url);
+  };
 
   return (
     <AnimatedPressable
@@ -126,6 +158,15 @@ export function AppointmentCard({
           ) : null}
         </View>
         <View style={styles.actions}>
+          <Pressable
+            onPress={handleAddToGoogleCalendar}
+            style={({ pressed }) => [
+              styles.calendarButton,
+              { backgroundColor: theme.primary + "15", opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Feather name="calendar" size={16} color={theme.primary} />
+          </Pressable>
           {onDelete ? (
             <Pressable
               onPress={onDelete}
@@ -216,5 +257,9 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: Spacing.xs,
+  },
+  calendarButton: {
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
 });
