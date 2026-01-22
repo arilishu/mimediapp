@@ -105,6 +105,7 @@ export default function ChildProfileScreen() {
   const tintColor = getChildTintColor(child.avatarIndex, theme);
   const nextAppointment = appointments[0];
   const recentVisits = visits.slice(0, 3);
+  const upcomingAppointments = appointments.filter((a) => isFuture(a.date)).slice(0, 3);
   const recentVaccines = vaccines.slice(0, 3);
   const recentMedications = medications.slice(0, 3);
   const recentAllergies = allergies.slice(0, 3);
@@ -112,6 +113,10 @@ export default function ChildProfileScreen() {
 
   const handleAddVisit = () => {
     navigation.navigate("AddVisit", { childId });
+  };
+
+  const handleAddAppointment = () => {
+    navigation.navigate("AddAppointment", { childId });
   };
 
   const handleToggleVaccine = async (vaccine: Vaccine) => {
@@ -193,6 +198,41 @@ export default function ChildProfileScreen() {
             <Feather name="plus" size={20} color={theme.primary} />
             <ThemedText type="body" style={{ color: theme.primary }}>
               Agregar primera visita
+            </ThemedText>
+          </Pressable>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <SectionHeader
+          title="Turnos"
+          onSeeMore={() => {
+            (navigation as any).navigate("Main", {
+              screen: "AppointmentsTab",
+              params: {
+                screen: "Appointments",
+              }
+            });
+          }}
+          showSeeMore={appointments.length > 3}
+          onAdd={handleAddAppointment}
+        />
+        {upcomingAppointments.length > 0 ? (
+          upcomingAppointments.map((appointment) => (
+            <AppointmentCard
+              key={appointment.id}
+              appointment={appointment}
+              doctor={appointment.doctorId ? doctors[appointment.doctorId] : undefined}
+            />
+          ))
+        ) : (
+          <Pressable
+            onPress={handleAddAppointment}
+            style={[styles.addCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <Feather name="plus" size={20} color={theme.primary} />
+            <ThemedText type="body" style={{ color: theme.primary }}>
+              Agregar primer turno
             </ThemedText>
           </Pressable>
         )}
