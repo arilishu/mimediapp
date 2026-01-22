@@ -63,9 +63,6 @@ export default function AddHospitalScreen() {
     if (!address.trim()) {
       newErrors.address = "La direccion es requerida";
     }
-    if (!phone.trim()) {
-      newErrors.phone = "El telefono es requerido";
-    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -80,7 +77,7 @@ export default function AddHospitalScreen() {
       await HospitalsAPI.create({
         name: name.trim(),
         address: address.trim(),
-        phone: phone.trim(),
+        phone: phone.trim() || "",
         specialties: selectedSpecialties,
         ownerId: userId,
       });
