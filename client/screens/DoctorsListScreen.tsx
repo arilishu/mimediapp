@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { View, FlatList, StyleSheet, Pressable, Alert, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
@@ -21,6 +22,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function DoctorsListScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const { userId } = useAuth();
@@ -94,7 +96,7 @@ export default function DoctorsListScreen() {
     navigation.setOptions({
       headerTitle: "Médicos",
       headerRight: () => (
-        <Pressable onPress={handleAdd} hitSlop={8} style={{ marginRight: Spacing.sm }}>
+        <Pressable onPress={handleAdd} hitSlop={8} style={{ marginRight: Spacing.lg }}>
           <Feather name="plus" size={24} color={theme.primary} />
         </Pressable>
       ),
@@ -161,7 +163,7 @@ export default function DoctorsListScreen() {
       />
 
       <Pressable
-        style={[styles.fab, { backgroundColor: theme.primary, bottom: insets.bottom + Spacing.xl }]}
+        style={[styles.fab, { backgroundColor: theme.primary, bottom: tabBarHeight + Spacing.lg }]}
         onPress={handleAdd}
       >
         <Feather name="plus" size={24} color="#FFFFFF" />
