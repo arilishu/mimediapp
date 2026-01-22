@@ -151,6 +151,8 @@ export default function AddMedicationScreen() {
             placeholder="Ej: 5ml cada 8hs"
             value={dose}
             onChangeText={setDose}
+            multiline
+            numberOfLines={3}
             testID="input-medication-dose"
           />
         </View>

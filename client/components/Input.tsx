@@ -17,6 +17,8 @@ interface InputProps extends TextInputProps {
   leftIcon?: keyof typeof Feather.glyphMap;
   rightIcon?: keyof typeof Feather.glyphMap;
   onRightIconPress?: () => void;
+  multiline?: boolean;
+  numberOfLines?: number;
 }
 
 export function Input({
@@ -26,6 +28,8 @@ export function Input({
   rightIcon,
   onRightIconPress,
   style,
+  multiline,
+  numberOfLines = 1,
   ...props
 }: InputProps) {
   const { theme } = useTheme();
@@ -36,6 +40,8 @@ export function Input({
     : isFocused
     ? theme.borderFocus
     : theme.border;
+
+  const inputHeight = multiline ? numberOfLines * 24 + Spacing.md * 2 : Spacing.inputHeight;
 
   return (
     <View style={styles.container}>
@@ -50,6 +56,9 @@ export function Input({
           {
             backgroundColor: theme.backgroundDefault,
             borderColor,
+            height: inputHeight,
+            alignItems: multiline ? "flex-start" : "center",
+            paddingVertical: multiline ? Spacing.sm : 0,
           },
         ]}
       >
@@ -67,12 +76,15 @@ export function Input({
             {
               color: theme.text,
               fontFamily: Typography.body.fontFamily,
+              textAlignVertical: multiline ? "top" : "center",
             },
             style,
           ]}
           placeholderTextColor={theme.textDisabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
           {...props}
         />
         {rightIcon ? (
