@@ -94,7 +94,7 @@ export default function DoctorsListScreen() {
     navigation.setOptions({
       headerTitle: "Médicos",
       headerRight: () => (
-        <Pressable onPress={handleAdd} hitSlop={8}>
+        <Pressable onPress={handleAdd} hitSlop={8} style={{ marginRight: Spacing.sm }}>
           <Feather name="plus" size={24} color={theme.primary} />
         </Pressable>
       ),
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    right: Spacing.lg,
+    right: Spacing.xl,
     width: 56,
     height: 56,
     borderRadius: 28,
