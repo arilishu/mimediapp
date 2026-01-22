@@ -174,6 +174,7 @@ export default function ChildProfileScreen() {
           title="Ultimas Visitas"
           onSeeMore={() => navigation.navigate("VisitsList", { childId })}
           showSeeMore={visits.length > 3}
+          onAdd={handleAddVisit}
         />
         {recentVisits.length > 0 ? (
           recentVisits.map((visit) => (

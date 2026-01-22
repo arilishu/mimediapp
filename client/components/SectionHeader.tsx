@@ -9,12 +9,14 @@ interface SectionHeaderProps {
   title: string;
   onSeeMore?: () => void;
   showSeeMore?: boolean;
+  onAdd?: () => void;
 }
 
 export function SectionHeader({
   title,
   onSeeMore,
   showSeeMore = true,
+  onAdd,
 }: SectionHeaderProps) {
   const { theme } = useTheme();
 
@@ -23,23 +25,37 @@ export function SectionHeader({
       <ThemedText type="h4" style={styles.title}>
         {title}
       </ThemedText>
-      {showSeeMore && onSeeMore ? (
-        <Pressable
-          onPress={onSeeMore}
-          style={({ pressed }) => [
-            styles.button,
-            { opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          <ThemedText
-            type="small"
-            style={[styles.buttonText, { color: theme.primary }]}
+      <View style={styles.actions}>
+        {onAdd ? (
+          <Pressable
+            onPress={onAdd}
+            style={({ pressed }) => [
+              styles.addButton,
+              { backgroundColor: theme.primary, opacity: pressed ? 0.8 : 1 },
+            ]}
+            hitSlop={8}
           >
-            Ver mas
-          </ThemedText>
-          <Feather name="chevron-right" size={16} color={theme.primary} />
-        </Pressable>
-      ) : null}
+            <Feather name="plus" size={16} color="#fff" />
+          </Pressable>
+        ) : null}
+        {showSeeMore && onSeeMore ? (
+          <Pressable
+            onPress={onSeeMore}
+            style={({ pressed }) => [
+              styles.button,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <ThemedText
+              type="small"
+              style={[styles.buttonText, { color: theme.primary }]}
+            >
+              Ver mas
+            </ThemedText>
+            <Feather name="chevron-right" size={16} color={theme.primary} />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -54,6 +70,18 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
+  },
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  addButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   button: {
     flexDirection: "row",
