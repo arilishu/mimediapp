@@ -9,6 +9,7 @@ import VisitsStackNavigator from "@/navigation/VisitsStackNavigator";
 import VaccinesStackNavigator from "@/navigation/VaccinesStackNavigator";
 import AppointmentsStackNavigator from "@/navigation/AppointmentsStackNavigator";
 import EmergencyStackNavigator from "@/navigation/EmergencyStackNavigator";
+import DoctorsStackNavigator from "@/navigation/DoctorsStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
@@ -16,6 +17,7 @@ export type MainTabParamList = {
   VisitsTab: undefined;
   VaccinesTab: { screen: string; params?: { childId?: string } } | undefined;
   AppointmentsTab: undefined;
+  DoctorsTab: undefined;
   EmergencyTab: undefined;
 };
 
@@ -87,6 +89,16 @@ export default function MainTabNavigator() {
           title: "Turnos",
           tabBarIcon: ({ color, size }) => (
             <Feather name="clock" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="DoctorsTab"
+        component={DoctorsStackNavigator}
+        options={{
+          title: "Médicos",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="user" size={size} color={color} />
           ),
         }}
       />
