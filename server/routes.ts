@@ -1020,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/hospitals", async (req: Request, res: Response) => {
     try {
       const { name, address, phone, specialties, ownerId } = req.body;
-      if (!name || !address || !phone || !ownerId) {
+      if (!name || !address || !ownerId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
@@ -1029,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `INSERT INTO hospitals (id, owner_id, name, address, phone, specialties)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [id, ownerId, name, address, phone, specialties || []]
+        [id, ownerId, name, address, phone || "", specialties || []]
       );
 
       const row = result.rows[0];
