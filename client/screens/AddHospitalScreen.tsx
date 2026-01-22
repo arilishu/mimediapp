@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@clerk/clerk-expo";
@@ -18,6 +19,7 @@ import { HospitalsAPI } from "@/lib/api";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type RouteProps = RouteProp<RootStackParamList, "AddHospital">;
 
 const SPECIALTIES = [
   "Pediatria",
@@ -34,14 +36,49 @@ export default function AddHospitalScreen() {
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteProps>();
   const { userId } = useAuth();
+  const { hospitalId } = route.params || {};
+
+  const isEditing = !!hospitalId;
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(isEditing);
   const [errors, setErrors] = useState<{ name?: string; address?: string; phone?: string }>({});
+
+  useEffect(() => {
+    if (isEditing && hospitalId && userId) {
+      loadHospital();
+    }
+  }, [hospitalId, userId]);
+
+  const loadHospital = async () => {
+    if (!userId) return;
+    try {
+      const hospitals = await HospitalsAPI.getAll(userId);
+      const hospital = hospitals.find((h) => h.id === hospitalId);
+      if (hospital) {
+        setName(hospital.name);
+        setAddress(hospital.address);
+        setPhone(hospital.phone || "");
+        setSelectedSpecialties(hospital.specialties || []);
+      }
+    } catch (error) {
+      console.error("Error loading hospital:", error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: isEditing ? "Editar Centro" : "Nuevo Centro",
+    });
+  }, [navigation, isEditing]);
 
   const toggleSpecialty = (specialty: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -74,23 +111,42 @@ export default function AddHospitalScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      await HospitalsAPI.create({
-        name: name.trim(),
-        address: address.trim(),
-        phone: phone.trim() || "",
-        specialties: selectedSpecialties,
-        ownerId: userId,
-      });
+      if (isEditing && hospitalId) {
+        await HospitalsAPI.update(hospitalId, {
+          name: name.trim(),
+          address: address.trim(),
+          phone: phone.trim() || "",
+          specialties: selectedSpecialties,
+        });
+      } else {
+        await HospitalsAPI.create({
+          name: name.trim(),
+          address: address.trim(),
+          phone: phone.trim() || "",
+          specialties: selectedSpecialties,
+          ownerId: userId,
+        });
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
     } catch (error) {
-      console.error("Error creating hospital:", error);
+      console.error("Error saving hospital:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoadingData) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
+        <ThemedText type="body" style={{ color: theme.textSecondary }}>
+          Cargando...
+        </ThemedText>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAwareScrollViewCompat
@@ -104,10 +160,10 @@ export default function AddHospitalScreen() {
       ]}
     >
       <ThemedText type="h3" style={styles.title}>
-        Nuevo Centro médico
+        {isEditing ? "Editar Centro médico" : "Nuevo Centro médico"}
       </ThemedText>
       <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-        Agrega un hospital, clínica o centro de salud
+        {isEditing ? "Modifica los datos del centro de salud" : "Agrega un hospital, clínica o centro de salud"}
       </ThemedText>
 
       <Input
@@ -191,13 +247,18 @@ export default function AddHospitalScreen() {
         disabled={isSubmitting}
         style={styles.submitButton}
       >
-        {isSubmitting ? "Guardando..." : "Guardar Centro"}
+        {isSubmitting ? "Guardando..." : isEditing ? "Guardar Cambios" : "Guardar Centro"}
       </Button>
     </KeyboardAwareScrollViewCompat>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   container: {
     flex: 1,
   },

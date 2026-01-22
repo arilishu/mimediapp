@@ -58,7 +58,12 @@ export default function EmergencyScreen() {
 
   const handleAddHospital = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    navigation.navigate("AddHospital");
+    navigation.navigate("AddHospital", {});
+  };
+
+  const handleEditHospital = (hospitalId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    navigation.navigate("AddHospital", { hospitalId });
   };
 
   const handleDeleteHospital = async (hospitalId: string) => {
@@ -76,6 +81,7 @@ export default function EmergencyScreen() {
   const renderItem = ({ item }: { item: Hospital }) => (
     <HospitalCard
       hospital={item}
+      onPress={() => handleEditHospital(item.id)}
       onDelete={() => handleDeleteHospital(item.id)}
     />
   );
