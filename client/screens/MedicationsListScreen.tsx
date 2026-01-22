@@ -113,6 +113,11 @@ export default function MedicationsListScreen() {
           <ThemedText type="body" style={{ fontWeight: "600" }}>
             {item.name}
           </ThemedText>
+          {item.symptom ? (
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+              {item.symptom}
+            </ThemedText>
+          ) : null}
           <ThemedText type="small" style={{ color: theme.textSecondary }}>
             {item.dose}
           </ThemedText>

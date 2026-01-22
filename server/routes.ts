@@ -900,6 +900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: row.id,
         childId: row.child_id,
         name: row.name,
+        symptom: row.symptom,
         dose: row.dose,
         category: row.category,
         recommendedDose: row.recommended_dose,
@@ -915,17 +916,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/medications", async (req: Request, res: Response) => {
     try {
-      const { childId, name, dose, category, recommendedDose } = req.body;
+      const { childId, name, symptom, dose, category, recommendedDose } = req.body;
       if (!childId || !name || !dose || !category) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
       const id = uuidv4();
       const result = await pool.query(
-        `INSERT INTO medications (id, child_id, name, dose, category, recommended_dose)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO medications (id, child_id, name, symptom, dose, category, recommended_dose)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [id, childId, name, dose, category, recommendedDose]
+        [id, childId, name, symptom, dose, category, recommendedDose]
       );
 
       const row = result.rows[0];
@@ -933,6 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: row.id,
         childId: row.child_id,
         name: row.name,
+        symptom: row.symptom,
         dose: row.dose,
         category: row.category,
         recommendedDose: row.recommended_dose,
@@ -947,13 +949,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/medications/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const { name, dose, category, recommendedDose } = req.body;
+      const { name, symptom, dose, category, recommendedDose } = req.body;
 
       const result = await pool.query(
-        `UPDATE medications SET name = COALESCE($2, name), dose = COALESCE($3, dose),
-         category = COALESCE($4, category), recommended_dose = COALESCE($5, recommended_dose)
+        `UPDATE medications SET name = COALESCE($2, name), symptom = $3, dose = COALESCE($4, dose),
+         category = COALESCE($5, category), recommended_dose = COALESCE($6, recommended_dose)
          WHERE id = $1 RETURNING *`,
-        [id, name, dose, category, recommendedDose]
+        [id, name, symptom, dose, category, recommendedDose]
       );
 
       if (result.rows.length === 0) {
@@ -965,6 +967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: row.id,
         childId: row.child_id,
         name: row.name,
+        symptom: row.symptom,
         dose: row.dose,
         category: row.category,
         recommendedDose: row.recommended_dose,

@@ -45,6 +45,7 @@ export interface Medication {
   id: string;
   childId: string;
   name: string;
+  symptom?: string;
   dose: string;
   category: string;
   recommendedDose?: string;

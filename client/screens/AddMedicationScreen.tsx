@@ -30,6 +30,7 @@ export default function AddMedicationScreen() {
   const isEditing = !!medicationId;
 
   const [name, setName] = useState("");
+  const [symptom, setSymptom] = useState("");
   const [dose, setDose] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(isEditing);
@@ -46,6 +47,7 @@ export default function AddMedicationScreen() {
       const medication = medications.find((m) => m.id === medicationId);
       if (medication) {
         setName(medication.name);
+        setSymptom(medication.symptom || "");
         setDose(medication.dose);
       }
     } catch (error) {
@@ -72,12 +74,14 @@ export default function AddMedicationScreen() {
       if (isEditing && medicationId) {
         await MedicationsAPI.update(medicationId, {
           name: name.trim(),
+          symptom: symptom.trim() || undefined,
           dose: dose.trim(),
         });
       } else {
         await MedicationsAPI.create({
           childId,
           name: name.trim(),
+          symptom: symptom.trim() || undefined,
           dose: dose.trim(),
           category: "Pediatria General",
         });
@@ -131,6 +135,15 @@ export default function AddMedicationScreen() {
             onChangeText={setName}
             autoCapitalize="words"
             testID="input-medication-name"
+          />
+
+          <Input
+            label="Sintoma"
+            placeholder="Ej: Fiebre, dolor de cabeza"
+            value={symptom}
+            onChangeText={setSymptom}
+            autoCapitalize="sentences"
+            testID="input-medication-symptom"
           />
 
           <Input
