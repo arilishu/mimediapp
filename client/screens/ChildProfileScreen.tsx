@@ -164,15 +164,31 @@ export default function ChildProfileScreen() {
         ) : null}
       </View>
 
-      {nextAppointment ? (
-        <View style={styles.section}>
-          <SectionHeader title="Proximo Turno" showSeeMore={false} />
-          <AppointmentCard
-            appointment={nextAppointment}
-            doctor={nextAppointment.doctorId ? doctors[nextAppointment.doctorId] : undefined}
-          />
-        </View>
-      ) : null}
+      <View style={styles.section}>
+        <SectionHeader
+          title="Turnos"
+          onAdd={handleAddAppointment}
+        />
+        {upcomingAppointments.length > 0 ? (
+          upcomingAppointments.map((appointment) => (
+            <AppointmentCard
+              key={appointment.id}
+              appointment={appointment}
+              doctor={appointment.doctorId ? doctors[appointment.doctorId] : undefined}
+            />
+          ))
+        ) : (
+          <Pressable
+            onPress={handleAddAppointment}
+            style={[styles.addCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <Feather name="plus" size={20} color={theme.primary} />
+            <ThemedText type="body" style={{ color: theme.primary }}>
+              Agregar primer turno
+            </ThemedText>
+          </Pressable>
+        )}
+      </View>
 
       <View style={styles.section}>
         <SectionHeader
@@ -198,32 +214,6 @@ export default function ChildProfileScreen() {
             <Feather name="plus" size={20} color={theme.primary} />
             <ThemedText type="body" style={{ color: theme.primary }}>
               Agregar primera visita
-            </ThemedText>
-          </Pressable>
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <SectionHeader
-          title="Turnos"
-          onAdd={handleAddAppointment}
-        />
-        {upcomingAppointments.length > 0 ? (
-          upcomingAppointments.map((appointment) => (
-            <AppointmentCard
-              key={appointment.id}
-              appointment={appointment}
-              doctor={appointment.doctorId ? doctors[appointment.doctorId] : undefined}
-            />
-          ))
-        ) : (
-          <Pressable
-            onPress={handleAddAppointment}
-            style={[styles.addCard, { backgroundColor: theme.backgroundDefault }]}
-          >
-            <Feather name="plus" size={20} color={theme.primary} />
-            <ThemedText type="body" style={{ color: theme.primary }}>
-              Agregar primer turno
             </ThemedText>
           </Pressable>
         )}
