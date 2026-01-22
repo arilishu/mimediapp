@@ -70,7 +70,7 @@ export default function MainTabNavigator() {
         name="EmergencyTab"
         component={EmergencyStackNavigator}
         options={{
-          title: "Emergencias",
+          title: "Centros",
           tabBarIcon: ({ color, size }) => (
             <Feather name="alert-circle" size={size} color={color} />
           ),

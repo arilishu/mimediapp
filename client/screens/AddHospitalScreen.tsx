@@ -107,15 +107,15 @@ export default function AddHospitalScreen() {
       ]}
     >
       <ThemedText type="h3" style={styles.title}>
-        Nuevo Hospital
+        Nuevo Centro médico
       </ThemedText>
       <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
-        Agrega un hospital o clinica de emergencia
+        Agrega un hospital, clínica o centro de salud
       </ThemedText>
 
       <Input
         label="Nombre"
-        placeholder="Ej: Hospital General"
+        placeholder="Ej: Centro Médico San José"
         value={name}
         onChangeText={(text) => {
           setName(text);
@@ -194,7 +194,7 @@ export default function AddHospitalScreen() {
         disabled={isSubmitting}
         style={styles.submitButton}
       >
-        {isSubmitting ? "Guardando..." : "Guardar Hospital"}
+        {isSubmitting ? "Guardando..." : "Guardar Centro"}
       </Button>
     </KeyboardAwareScrollViewCompat>
   );

@@ -19,7 +19,7 @@ export default function EmergencyStackNavigator() {
         name="Emergency"
         component={EmergencyScreen}
         options={{
-          headerTitle: "Hospitales de Emergencia",
+          headerTitle: "Centros médicos",
         }}
       />
     </Stack.Navigator>

@@ -101,7 +101,7 @@ export default function RootStackNavigator() {
         component={AddHospitalScreen}
         options={{
           presentation: "modal",
-          headerTitle: "Nuevo Hospital",
+          headerTitle: "Nuevo Centro médico",
         }}
       />
       <Stack.Screen

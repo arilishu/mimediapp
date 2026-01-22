@@ -83,9 +83,9 @@ export default function EmergencyScreen() {
   const renderEmpty = () => (
     <EmptyState
       image={require("../../assets/images/illustrations/empty_hospitals_building_icon.png")}
-      title="Agrega hospitales cercanos"
-      subtitle="Ten a mano los contactos de emergencia"
-      buttonText="Agregar Hospital"
+      title="Agrega centros médicos"
+      subtitle="Ten a mano los contactos de tus centros de salud"
+      buttonText="Agregar Centro"
       onButtonPress={handleAddHospital}
     />
   );
