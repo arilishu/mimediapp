@@ -5,18 +5,12 @@ import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
 
 import DashboardStackNavigator from "@/navigation/DashboardStackNavigator";
-import VisitsStackNavigator from "@/navigation/VisitsStackNavigator";
-import VaccinesStackNavigator from "@/navigation/VaccinesStackNavigator";
-import AppointmentsStackNavigator from "@/navigation/AppointmentsStackNavigator";
 import EmergencyStackNavigator from "@/navigation/EmergencyStackNavigator";
 import DoctorsStackNavigator from "@/navigation/DoctorsStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
   DashboardTab: undefined;
-  VisitsTab: undefined;
-  VaccinesTab: { screen: string; params?: { childId?: string } } | undefined;
-  AppointmentsTab: undefined;
   DoctorsTab: undefined;
   EmergencyTab: undefined;
 };
@@ -59,36 +53,6 @@ export default function MainTabNavigator() {
           title: "Niños",
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="VisitsTab"
-        component={VisitsStackNavigator}
-        options={{
-          title: "Visitas",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="calendar" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="VaccinesTab"
-        component={VaccinesStackNavigator}
-        options={{
-          title: "Vacunas",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="shield" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="AppointmentsTab"
-        component={AppointmentsStackNavigator}
-        options={{
-          title: "Turnos",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="clock" size={size} color={color} />
           ),
         }}
       />

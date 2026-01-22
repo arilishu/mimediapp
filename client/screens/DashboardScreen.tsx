@@ -241,10 +241,7 @@ export default function DashboardScreen() {
               style={styles.vaccineCard}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                rootNavigation.navigate("VaccinesTab", { 
-                  screen: "Vaccines", 
-                  params: { childId: vaccine.childId } 
-                });
+                navigation.navigate("ChildProfile", { childId: vaccine.childId });
               }}
             >
               <View style={styles.vaccineRow}>

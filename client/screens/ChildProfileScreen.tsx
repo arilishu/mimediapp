@@ -206,15 +206,6 @@ export default function ChildProfileScreen() {
       <View style={styles.section}>
         <SectionHeader
           title="Turnos"
-          onSeeMore={() => {
-            (navigation as any).navigate("Main", {
-              screen: "AppointmentsTab",
-              params: {
-                screen: "Appointments",
-              }
-            });
-          }}
-          showSeeMore={appointments.length > 3}
           onAdd={handleAddAppointment}
         />
         {upcomingAppointments.length > 0 ? (
@@ -241,17 +232,6 @@ export default function ChildProfileScreen() {
       <View style={styles.section}>
         <SectionHeader
           title="Vacunas"
-          onSeeMore={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            (navigation as any).navigate("Main", {
-              screen: "VaccinesTab", 
-              params: { 
-                screen: "Vaccines", 
-                params: { childId } 
-              }
-            });
-          }}
-          showSeeMore={vaccines.length > 3}
         />
         {recentVaccines.length > 0 ? (
           recentVaccines.map((vaccine) => (
