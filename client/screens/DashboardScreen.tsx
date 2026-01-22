@@ -217,6 +217,31 @@ export default function DashboardScreen() {
     );
   };
 
+  const renderDoctorsSection = () => {
+    return (
+      <Pressable
+        style={[styles.doctorsCard, { backgroundColor: theme.backgroundDefault }]}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          navigation.navigate("DoctorsList");
+        }}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: theme.primary + "20" }]}>
+          <Feather name="users" size={20} color={theme.primary} />
+        </View>
+        <View style={styles.doctorsInfo}>
+          <Text style={[styles.doctorsTitle, { color: theme.text, fontFamily: "Nunito_700Bold" }]}>
+            Mis Médicos
+          </Text>
+          <Text style={[styles.doctorsSubtitle, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}>
+            Gestionar médicos para visitas y turnos
+          </Text>
+        </View>
+        <Feather name="chevron-right" size={20} color={theme.textDisabled} />
+      </Pressable>
+    );
+  };
+
   const renderVaccinesSection = () => {
     if (children.length === 0) return null;
 
@@ -288,6 +313,7 @@ export default function DashboardScreen() {
         }
       >
         {renderChildrenSection()}
+        {renderDoctorsSection()}
         {renderAppointmentsSection()}
         {renderVaccinesSection()}
       </ScrollView>
@@ -398,6 +424,23 @@ const styles = StyleSheet.create({
     fontSize: Typography.body.fontSize,
   },
   vaccineChild: {
+    fontSize: Typography.small.fontSize,
+    marginTop: 2,
+  },
+  doctorsCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: 12,
+    marginBottom: Spacing.xl,
+  },
+  doctorsInfo: {
+    flex: 1,
+  },
+  doctorsTitle: {
+    fontSize: Typography.body.fontSize,
+  },
+  doctorsSubtitle: {
     fontSize: Typography.small.fontSize,
     marginTop: 2,
   },
