@@ -163,7 +163,7 @@ export default function DoctorsListScreen() {
       />
 
       <Pressable
-        style={[styles.fab, { backgroundColor: theme.primary, bottom: tabBarHeight + Spacing.lg }]}
+        style={[styles.fab, { backgroundColor: theme.primary, bottom: tabBarHeight + Spacing["2xl"] }]}
         onPress={handleAdd}
       >
         <Feather name="plus" size={24} color="#FFFFFF" />
