@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, Platform } from "react-native";
+import { View, StyleSheet, Pressable, Platform, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -79,6 +79,38 @@ export default function AddAppointmentScreen() {
       console.error("Error loading data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!appointmentId) return;
+    
+    const message = "¿Estás seguro de eliminar este turno?";
+    
+    const performDelete = async () => {
+      try {
+        await AppointmentsAPI.delete(appointmentId);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        navigation.goBack();
+      } catch (error) {
+        console.error("Error deleting appointment:", error);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    };
+    
+    if (Platform.OS === "web") {
+      if (window.confirm(message)) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(
+        "Eliminar Turno",
+        message,
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Eliminar", style: "destructive", onPress: performDelete },
+        ]
+      );
     }
   };
 
@@ -348,6 +380,18 @@ export default function AddAppointmentScreen() {
       >
         {isSubmitting ? "Guardando..." : isEditing ? "Guardar Cambios" : "Agendar Turno"}
       </Button>
+
+      {isEditing ? (
+        <Pressable
+          onPress={handleDelete}
+          style={styles.deleteButton}
+        >
+          <Feather name="trash-2" size={18} color="#DC3545" />
+          <ThemedText type="body" style={styles.deleteButtonText}>
+            Eliminar Turno
+          </ThemedText>
+        </Pressable>
+      ) : null}
     </KeyboardAwareScrollViewCompat>
   );
 }
@@ -423,5 +467,17 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: Spacing.xl,
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    padding: Spacing.md,
+  },
+  deleteButtonText: {
+    color: "#DC3545",
+    fontWeight: "500",
   },
 });

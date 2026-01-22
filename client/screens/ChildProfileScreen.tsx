@@ -213,7 +213,6 @@ export default function ChildProfileScreen() {
               appointment={appointment}
               doctor={appointment.doctorId ? doctors[appointment.doctorId] : undefined}
               onPress={() => navigation.navigate("AddAppointment", { childId, appointmentId: appointment.id })}
-              onDelete={() => handleDeleteAppointment(appointment)}
             />
           ))
         ) : (
