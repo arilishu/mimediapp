@@ -806,6 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: row.name,
         specialty: row.specialty,
         phone: row.phone,
+        address: row.address,
         createdAt: row.created_at,
       }));
 
@@ -818,17 +819,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/doctors", async (req: Request, res: Response) => {
     try {
-      const { name, specialty, phone, ownerId } = req.body;
+      const { name, specialty, phone, address, ownerId } = req.body;
       if (!name || !specialty || !ownerId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
       const id = uuidv4();
       const result = await pool.query(
-        `INSERT INTO doctors (id, owner_id, name, specialty, phone)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO doctors (id, owner_id, name, specialty, phone, address)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [id, ownerId, name, specialty, phone]
+        [id, ownerId, name, specialty, phone || "", address || ""]
       );
 
       const row = result.rows[0];
@@ -837,6 +838,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: row.name,
         specialty: row.specialty,
         phone: row.phone,
+        address: row.address,
         createdAt: row.created_at,
       });
     } catch (error) {
@@ -848,12 +850,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/doctors/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const { name, specialty, phone } = req.body;
+      const { name, specialty, phone, address } = req.body;
 
       const result = await pool.query(
         `UPDATE doctors SET name = COALESCE($2, name), specialty = COALESCE($3, specialty),
-         phone = COALESCE($4, phone) WHERE id = $1 RETURNING *`,
-        [id, name, specialty, phone]
+         phone = COALESCE($4, phone), address = COALESCE($5, address) WHERE id = $1 RETURNING *`,
+        [id, name, specialty, phone, address]
       );
 
       if (result.rows.length === 0) {
@@ -866,6 +868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: row.name,
         specialty: row.specialty,
         phone: row.phone,
+        address: row.address,
         createdAt: row.created_at,
       });
     } catch (error) {

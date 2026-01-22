@@ -34,6 +34,7 @@ export default function AddDoctorScreen() {
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(isEditing);
 
@@ -52,6 +53,7 @@ export default function AddDoctorScreen() {
         setName(doctor.name);
         setSpecialty(doctor.specialty);
         setPhone(doctor.phone || "");
+        setAddress(doctor.address || "");
       }
     } catch (error) {
       console.error("Error loading doctor:", error);
@@ -79,6 +81,7 @@ export default function AddDoctorScreen() {
           name: name.trim(),
           specialty: specialty.trim(),
           phone: phone.trim() || undefined,
+          address: address.trim() || undefined,
         });
       } else {
         await DoctorsAPI.create({
@@ -86,6 +89,7 @@ export default function AddDoctorScreen() {
           name: name.trim(),
           specialty: specialty.trim(),
           phone: phone.trim() || undefined,
+          address: address.trim() || undefined,
         });
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -159,6 +163,15 @@ export default function AddDoctorScreen() {
             onChangeText={setPhone}
             keyboardType="phone-pad"
             testID="input-doctor-phone"
+          />
+
+          <Input
+            label="Dirección (opcional)"
+            placeholder="Ej: Av. Libertador 1234, CABA"
+            value={address}
+            onChangeText={setAddress}
+            autoCapitalize="words"
+            testID="input-doctor-address"
           />
         </View>
 

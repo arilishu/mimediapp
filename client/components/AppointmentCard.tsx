@@ -79,8 +79,12 @@ export function AppointmentCard({
         appointment.notes ? `Notas: ${appointment.notes}` : "",
       ].filter(Boolean).join("\n")
     );
+    const location = doctor?.address ? encodeURIComponent(doctor.address) : "";
     
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
+    let url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
+    if (location) {
+      url += `&location=${location}`;
+    }
     
     Linking.openURL(url);
   };

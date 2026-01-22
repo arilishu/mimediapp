@@ -38,6 +38,7 @@ export interface Doctor {
   name: string;
   specialty: string;
   phone?: string;
+  address?: string;
   createdAt: string;
 }
 
