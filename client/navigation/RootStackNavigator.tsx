@@ -15,6 +15,8 @@ import AddAllergyScreen from "@/screens/AddAllergyScreen";
 import DiseasesListScreen from "@/screens/DiseasesListScreen";
 import AddDiseaseScreen from "@/screens/AddDiseaseScreen";
 import VisitsListScreen from "@/screens/VisitsListScreen";
+import DoctorsListScreen from "@/screens/DoctorsListScreen";
+import AddDoctorScreen from "@/screens/AddDoctorScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -32,6 +34,8 @@ export type RootStackParamList = {
   AddAllergy: { childId: string; allergyId?: string };
   DiseasesList: { childId: string };
   AddDisease: { childId: string; diseaseId?: string };
+  DoctorsList: undefined;
+  AddDoctor: { doctorId?: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -143,6 +147,21 @@ export default function RootStackNavigator() {
         options={{
           presentation: "modal",
           headerTitle: "Enfermedad",
+        }}
+      />
+      <Stack.Screen
+        name="DoctorsList"
+        component={DoctorsListScreen}
+        options={{
+          headerTitle: "Médicos",
+        }}
+      />
+      <Stack.Screen
+        name="AddDoctor"
+        component={AddDoctorScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Médico",
         }}
       />
     </Stack.Navigator>
