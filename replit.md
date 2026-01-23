@@ -102,9 +102,17 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 - Password: replitClerk
 
 ## Recent Changes
+- Added Sentry error monitoring for both frontend (sentry-expo) and backend (@sentry/node)
+- Added GitHub integration for pushing code to repository
 - Added Dashboard sections for "Mis Hijos", "Proximos Turnos", and "Vacunas Pendientes"
 - Added API endpoints for user-level appointments and vaccines queries
 - Migrated all data storage from AsyncStorage to PostgreSQL database
 - Added REST API endpoints for all entities
 - Implemented user-based data isolation using Clerk userId
 - Added child sharing with share_codes and child_access tables
+
+## Error Monitoring (Sentry)
+- Frontend: Uses sentry-expo, initialized in App.tsx
+- Backend: Uses @sentry/node, initialized in server/index.ts
+- DSN stored in SENTRY_DSN (backend) and EXPO_PUBLIC_SENTRY_DSN (frontend) secrets
+- Errors are captured automatically and sent to Sentry dashboard

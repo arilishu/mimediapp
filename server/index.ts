@@ -1,11 +1,18 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
+import * as Sentry from "@sentry/node";
 import { registerRoutes } from "./routes";
 import * as fs from "fs";
 import * as path from "path";
 
 const app = express();
 const log = console.log;
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  environment: process.env.NODE_ENV || "development",
+});
 
 declare module "http" {
   interface IncomingMessage {
@@ -216,6 +223,8 @@ function setupErrorHandler(app: express.Application) {
     const message = error.message || "Internal Server Error";
 
     console.error("Internal Server Error:", err);
+    
+    Sentry.captureException(err);
 
     if (res.headersSent) {
       return next(err);
