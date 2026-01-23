@@ -7,7 +7,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
-import * as Sentry from "sentry-expo";
 import {
   useFonts,
   Nunito_400Regular,
@@ -15,12 +14,6 @@ import {
   Nunito_700Bold,
 } from "@expo-google-fonts/nunito";
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
-
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  enableInExpoDevelopment: false,
-  debug: __DEV__,
-});
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
