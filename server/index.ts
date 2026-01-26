@@ -1,6 +1,7 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import * as Sentry from "@sentry/node";
+import { clerkMiddleware } from "./middleware/auth";
 import { registerRoutes } from "./routes";
 import * as fs from "fs";
 import * as path from "path";
@@ -47,7 +48,7 @@ function setupCors(app: express.Application) {
         "Access-Control-Allow-Methods",
         "GET, POST, PUT, DELETE, OPTIONS",
       );
-      res.header("Access-Control-Allow-Headers", "Content-Type");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
       res.header("Access-Control-Allow-Credentials", "true");
     }
 
@@ -237,6 +238,9 @@ function setupErrorHandler(app: express.Application) {
 (async () => {
   setupCors(app);
   setupBodyParsing(app);
+  
+  app.use(clerkMiddleware());
+  
   setupRequestLogging(app);
 
   configureExpoAndLanding(app);
