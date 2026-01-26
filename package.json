@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.18",
+    "@clerk/express": "^1.7.65",
     "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
     "@octokit/rest": "^22.0.0",
