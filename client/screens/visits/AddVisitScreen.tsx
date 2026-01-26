@@ -142,8 +142,9 @@ export default function AddVisitScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
-      quality: 0.7,
+      quality: 0.3,
       base64: true,
+      exif: false,
     });
 
     if (!result.canceled && result.assets) {
@@ -172,8 +173,9 @@ export default function AddVisitScreen() {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      quality: 0.7,
+      quality: 0.3,
       base64: true,
+      exif: false,
     });
 
     if (!result.canceled && result.assets[0]) {
