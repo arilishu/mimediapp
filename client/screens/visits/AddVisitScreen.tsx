@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, Platform } from "react-native";
+import { View, StyleSheet, Pressable, Platform, ScrollView, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -7,8 +7,10 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "@clerk/clerk-expo";
+import { Image } from "expo-image";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
@@ -16,12 +18,19 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { VisitsAPI, DoctorsAPI } from "@/lib/api";
-import type { Doctor } from "@/types";
+import { VisitsAPI, DoctorsAPI, VisitPhotosAPI } from "@/lib/api";
+import type { Doctor, VisitPhoto } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RouteProps = RouteProp<RootStackParamList, "AddVisit">;
+
+interface LocalPhoto {
+  id?: string;
+  uri: string;
+  base64?: string;
+  isNew: boolean;
+}
 
 export default function AddVisitScreen() {
   const insets = useSafeAreaInsets();
@@ -49,6 +58,10 @@ export default function AddVisitScreen() {
   const [newDoctorName, setNewDoctorName] = useState("");
   const [newDoctorSpecialty, setNewDoctorSpecialty] = useState("");
 
+  const [photos, setPhotos] = useState<LocalPhoto[]>([]);
+  const [cameraPermission, requestCameraPermission] = ImagePicker.useCameraPermissions();
+  const [mediaPermission, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
+
   useEffect(() => {
     loadDoctors();
   }, [userId]);
@@ -56,6 +69,7 @@ export default function AddVisitScreen() {
   useEffect(() => {
     if (isEditing && visitId) {
       loadVisit();
+      loadPhotos();
     }
   }, [visitId]);
 
@@ -78,6 +92,20 @@ export default function AddVisitScreen() {
     }
   };
 
+  const loadPhotos = async () => {
+    if (!visitId) return;
+    try {
+      const existingPhotos = await VisitPhotosAPI.getByVisitId(visitId);
+      setPhotos(existingPhotos.map((p) => ({
+        id: p.id,
+        uri: p.photoData,
+        isNew: false,
+      })));
+    } catch (error) {
+      console.error("Error loading photos:", error);
+    }
+  };
+
   const loadDoctors = async () => {
     if (!userId) return;
     try {
@@ -86,6 +114,80 @@ export default function AddVisitScreen() {
     } catch (error) {
       console.error("Error loading doctors:", error);
     }
+  };
+
+  const pickFromGallery = async () => {
+    if (!mediaPermission?.granted) {
+      if (mediaPermission?.status === "denied" && !mediaPermission.canAskAgain) {
+        if (Platform.OS !== "web") {
+          try {
+            await Linking.openSettings();
+          } catch {}
+        }
+        return;
+      }
+      const result = await requestMediaPermission();
+      if (!result.granted) return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets) {
+      const newPhotos = result.assets.map((asset: ImagePicker.ImagePickerAsset) => ({
+        uri: asset.uri,
+        base64: asset.base64 || undefined,
+        isNew: true,
+      }));
+      setPhotos((prev) => [...prev, ...newPhotos]);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const takePhoto = async () => {
+    if (!cameraPermission?.granted) {
+      if (cameraPermission?.status === "denied" && !cameraPermission.canAskAgain) {
+        if (Platform.OS !== "web") {
+          try {
+            await Linking.openSettings();
+          } catch {}
+        }
+        return;
+      }
+      const result = await requestCameraPermission();
+      if (!result.granted) return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setPhotos((prev) => [...prev, {
+        uri: result.assets[0].uri,
+        base64: result.assets[0].base64 || undefined,
+        isNew: true,
+      }]);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const removePhoto = async (index: number) => {
+    const photo = photos[index];
+    if (!photo.isNew && photo.id) {
+      try {
+        await VisitPhotosAPI.delete(photo.id);
+      } catch (error) {
+        console.error("Error deleting photo:", error);
+      }
+    }
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const handleSubmit = async () => {
@@ -112,6 +214,8 @@ export default function AddVisitScreen() {
         return;
       }
 
+      let currentVisitId = visitId;
+
       if (isEditing && visitId) {
         await VisitsAPI.update(visitId, {
           doctorId,
@@ -122,7 +226,7 @@ export default function AddVisitScreen() {
           notes: notes.trim() || undefined,
         });
       } else {
-        await VisitsAPI.create({
+        const newVisit = await VisitsAPI.create({
           childId,
           doctorId,
           date: date.toISOString(),
@@ -131,6 +235,14 @@ export default function AddVisitScreen() {
           headCircumference: headCircumference ? parseFloat(headCircumference) : undefined,
           notes: notes.trim() || undefined,
         });
+        currentVisitId = newVisit.id;
+      }
+
+      const newPhotos = photos.filter((p) => p.isNew && p.base64);
+      for (const photo of newPhotos) {
+        if (currentVisitId && photo.base64) {
+          await VisitPhotosAPI.create(currentVisitId, `data:image/jpeg;base64,${photo.base64}`);
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -321,6 +433,56 @@ export default function AddVisitScreen() {
         style={styles.notesInput}
       />
 
+      <ThemedText type="h4" style={styles.sectionTitle}>
+        Fotos
+      </ThemedText>
+
+      <View style={styles.photoButtons}>
+        <Pressable
+          onPress={takePhoto}
+          style={[styles.photoButton, { backgroundColor: theme.primary }]}
+        >
+          <Feather name="camera" size={20} color="#FFFFFF" />
+          <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+            Camara
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          onPress={pickFromGallery}
+          style={[styles.photoButton, { backgroundColor: theme.secondary }]}
+        >
+          <Feather name="image" size={20} color="#FFFFFF" />
+          <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+            Galeria
+          </ThemedText>
+        </Pressable>
+      </View>
+
+      {photos.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.photosScroll}
+          contentContainerStyle={styles.photosContainer}
+        >
+          {photos.map((photo, index) => (
+            <View key={index} style={styles.photoWrapper}>
+              <Image
+                source={{ uri: photo.uri }}
+                style={styles.photoThumbnail}
+                contentFit="cover"
+              />
+              <Pressable
+                onPress={() => removePhoto(index)}
+                style={[styles.removePhotoButton, { backgroundColor: theme.error }]}
+              >
+                <Feather name="x" size={14} color="#FFFFFF" />
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
+      ) : null}
+
       <Button
         onPress={handleSubmit}
         disabled={isSubmitting || (!selectedDoctorId && !newDoctorName.trim())}
@@ -403,6 +565,44 @@ const styles = StyleSheet.create({
   notesInput: {
     height: 100,
     textAlignVertical: "top",
+  },
+  photoButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  photoButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.xs,
+  },
+  photosScroll: {
+    marginBottom: Spacing.md,
+  },
+  photosContainer: {
+    gap: Spacing.sm,
+  },
+  photoWrapper: {
+    position: "relative",
+  },
+  photoThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: BorderRadius.sm,
+  },
+  removePhotoButton: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
   submitButton: {
     marginTop: Spacing.xl,
