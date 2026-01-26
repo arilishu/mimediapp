@@ -12,7 +12,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "@clerk/clerk-expo";
 import { Image } from "expo-image";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";

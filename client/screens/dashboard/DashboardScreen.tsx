@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { View, ScrollView, StyleSheet, RefreshControl, Text, Pressable, Alert, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -30,7 +30,7 @@ export default function DashboardScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const rootNavigation = useNavigation<any>();
-  const { userId } = useAuth();
+  const { userId, isLoaded, getToken } = useAuth();
 
   const [children, setChildren] = useState<Child[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -39,9 +39,15 @@ export default function DashboardScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   const loadData = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !isLoaded) return;
+    
+    const token = await getToken();
+    if (!token) {
+      return;
+    }
     
     try {
       const [childrenData, appointmentsData, vaccinesData] = await Promise.all([
@@ -52,13 +58,14 @@ export default function DashboardScreen() {
       setChildren(childrenData);
       setAppointments(appointmentsData);
       setPendingVaccines(vaccinesData);
+      hasLoadedOnce.current = true;
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [userId]);
+  }, [userId, isLoaded, getToken]);
 
   useFocusEffect(
     useCallback(() => {
