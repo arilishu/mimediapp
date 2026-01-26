@@ -344,6 +344,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== VISIT PHOTOS ====================
+  app.get("/api/visit-photos", async (req: Request, res: Response) => {
+    try {
+      const authUserId = requireAuth(req, res);
+      if (!authUserId) return;
+
+      const visitId = req.query.visitId as string;
+      if (!visitId) return res.status(400).json({ error: "visitId required" });
+
+      const result = await pool.query(
+        "SELECT * FROM visit_photos WHERE visit_id = $1 ORDER BY created_at DESC",
+        [visitId]
+      );
+
+      const photos = result.rows.map((row) => ({
+        id: row.id,
+        visitId: row.visit_id,
+        photoData: row.photo_data,
+        createdAt: row.created_at,
+      }));
+
+      return res.json(photos);
+    } catch (error) {
+      console.error("Error fetching visit photos:", error);
+      return res.status(500).json({ error: "Failed to fetch photos" });
+    }
+  });
+
+  app.post("/api/visit-photos", async (req: Request, res: Response) => {
+    try {
+      const authUserId = requireAuth(req, res);
+      if (!authUserId) return;
+
+      const { visitId, photoData } = req.body;
+      if (!visitId || !photoData) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const id = uuidv4();
+      const result = await pool.query(
+        `INSERT INTO visit_photos (id, visit_id, photo_data)
+         VALUES ($1, $2, $3)
+         RETURNING *`,
+        [id, visitId, photoData]
+      );
+
+      const row = result.rows[0];
+      return res.json({
+        id: row.id,
+        visitId: row.visit_id,
+        photoData: row.photo_data,
+        createdAt: row.created_at,
+      });
+    } catch (error) {
+      console.error("Error creating visit photo:", error);
+      return res.status(500).json({ error: "Failed to create photo" });
+    }
+  });
+
+  app.delete("/api/visit-photos/:id", async (req: Request, res: Response) => {
+    try {
+      const authUserId = requireAuth(req, res);
+      if (!authUserId) return;
+
+      const { id } = req.params;
+      await pool.query("DELETE FROM visit_photos WHERE id = $1", [id]);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting visit photo:", error);
+      return res.status(500).json({ error: "Failed to delete photo" });
+    }
+  });
+
   // ==================== VACCINES ====================
   app.get("/api/vaccines", async (req: Request, res: Response) => {
     try {
