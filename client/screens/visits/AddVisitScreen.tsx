@@ -57,6 +57,7 @@ export default function AddVisitScreen() {
   const [showNewDoctor, setShowNewDoctor] = useState(false);
   const [newDoctorName, setNewDoctorName] = useState("");
   const [newDoctorSpecialty, setNewDoctorSpecialty] = useState("");
+  const [doctorsLoaded, setDoctorsLoaded] = useState(false);
 
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [cameraPermission, requestCameraPermission] = ImagePicker.useCameraPermissions();
@@ -65,6 +66,12 @@ export default function AddVisitScreen() {
   useEffect(() => {
     loadDoctors();
   }, [userId]);
+
+  useEffect(() => {
+    if (doctorsLoaded && doctors.length === 0) {
+      setShowNewDoctor(true);
+    }
+  }, [doctors, doctorsLoaded]);
 
   useEffect(() => {
     if (isEditing && visitId) {
@@ -113,6 +120,8 @@ export default function AddVisitScreen() {
       setDoctors(doctorsData);
     } catch (error) {
       console.error("Error loading doctors:", error);
+    } finally {
+      setDoctorsLoaded(true);
     }
   };
 
