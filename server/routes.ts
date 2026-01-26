@@ -3,6 +3,7 @@ import { createServer, type Server } from "node:http";
 import { getAuth } from "@clerk/express";
 import pg from "pg";
 import { v4 as uuidv4 } from "uuid";
+import { transcribeAudio } from "./replit_integrations/audio/transcribe";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -1520,6 +1521,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating child access:", error);
       return res.status(500).json({ error: "Failed to create child access" });
+    }
+  });
+
+  // ==================== AUDIO TRANSCRIPTION ====================
+  app.post("/api/transcribe", async (req: Request, res: Response) => {
+    try {
+      const authUserId = requireAuth(req, res);
+      if (!authUserId) return;
+
+      const { audio } = req.body;
+      if (!audio) {
+        return res.status(400).json({ error: "Audio data is required" });
+      }
+
+      const audioBuffer = Buffer.from(audio, "base64");
+      const transcript = await transcribeAudio(audioBuffer);
+
+      return res.json({ transcript });
+    } catch (error) {
+      console.error("Error transcribing audio:", error);
+      return res.status(500).json({ error: "Failed to transcribe audio" });
     }
   });
 

@@ -290,3 +290,12 @@ export const ChildAccessAPI = {
       body: JSON.stringify({ childId, userId, isReadOnly }),
     }),
 };
+
+// ==================== TRANSCRIPTION API ====================
+export const TranscriptionAPI = {
+  transcribe: (audioBase64: string) =>
+    fetchJson<{ transcript: string }>("/api/transcribe", {
+      method: "POST",
+      body: JSON.stringify({ audio: audioBase64 }),
+    }),
+};

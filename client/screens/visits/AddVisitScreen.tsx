@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, Platform, ScrollView, Linking } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, StyleSheet, Pressable, Platform, ScrollView, Linking, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -11,6 +11,8 @@ import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "@clerk/clerk-expo";
 import { Image } from "expo-image";
+import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
+import * as FileSystem from "expo-file-system";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
@@ -18,7 +20,7 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { VisitsAPI, DoctorsAPI, VisitPhotosAPI } from "@/lib/api";
+import { VisitsAPI, DoctorsAPI, VisitPhotosAPI, TranscriptionAPI } from "@/lib/api";
 import type { Doctor, VisitPhoto } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -62,6 +64,65 @@ export default function AddVisitScreen() {
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [cameraPermission, requestCameraPermission] = ImagePicker.useCameraPermissions();
   const [mediaPermission, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [audioPermissionGranted, setAudioPermissionGranted] = useState(false);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
+  useEffect(() => {
+    checkAudioPermission();
+  }, []);
+
+  const checkAudioPermission = async () => {
+    const status = await AudioModule.requestRecordingPermissionsAsync();
+    setAudioPermissionGranted(status.granted);
+  };
+
+  const startRecording = async () => {
+    if (!audioPermissionGranted) {
+      const status = await AudioModule.requestRecordingPermissionsAsync();
+      if (!status.granted) {
+        return;
+      }
+      setAudioPermissionGranted(true);
+    }
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      audioRecorder.record();
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error starting recording:", error);
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await audioRecorder.stop();
+      setIsRecording(false);
+
+      if (audioRecorder.uri) {
+        setIsTranscribing(true);
+        try {
+          const base64Audio = await FileSystem.readAsStringAsync(audioRecorder.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const result = await TranscriptionAPI.transcribe(base64Audio);
+          if (result.transcript) {
+            setNotes((prev) => (prev ? prev + "\n" + result.transcript : result.transcript));
+          }
+        } catch (error) {
+          console.error("Error transcribing audio:", error);
+        } finally {
+          setIsTranscribing(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error stopping recording:", error);
+      setIsRecording(false);
+    }
+  };
 
   useEffect(() => {
     loadDoctors();
@@ -434,8 +495,36 @@ export default function AddVisitScreen() {
         keyboardType="decimal-pad"
       />
 
+      <View style={styles.notesHeader}>
+        <ThemedText type="label" style={{ color: theme.text }}>
+          Notas / Indicaciones
+        </ThemedText>
+        <Pressable
+          onPress={isRecording ? stopRecording : startRecording}
+          disabled={isTranscribing}
+          style={[
+            styles.voiceButton,
+            {
+              backgroundColor: isRecording ? theme.error : theme.primary,
+              opacity: isTranscribing ? 0.5 : 1,
+            },
+          ]}
+        >
+          {isTranscribing ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Feather
+              name={isRecording ? "stop-circle" : "mic"}
+              size={16}
+              color="#FFFFFF"
+            />
+          )}
+          <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600", marginLeft: 4 }}>
+            {isTranscribing ? "Transcribiendo..." : isRecording ? "Detener" : "Voz"}
+          </ThemedText>
+        </Pressable>
+      </View>
       <Input
-        label="Notas / Indicaciones"
         placeholder="Observaciones de la consulta..."
         value={notes}
         onChangeText={setNotes}
@@ -572,6 +661,19 @@ const styles = StyleSheet.create({
   },
   halfInput: {
     flex: 1,
+  },
+  notesHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  voiceButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
   },
   notesInput: {
     height: 100,
