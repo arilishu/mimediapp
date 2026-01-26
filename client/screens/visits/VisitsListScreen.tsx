@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, FlatList, StyleSheet, Pressable, Alert } from "react-native";
+import { View, FlatList, StyleSheet, Pressable, Alert, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
@@ -7,19 +7,24 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 
 import { ThemedText } from "@/components/ThemedText";
 import { EmptyState } from "@/components/EmptyState";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { VisitsAPI, ChildrenAPI, DoctorsAPI } from "@/lib/api";
+import { VisitsAPI, ChildrenAPI, DoctorsAPI, VisitPhotosAPI } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
-import type { MedicalVisit, Child, Doctor } from "@/types";
+import type { MedicalVisit, Child, Doctor, VisitPhoto } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useAuth } from "@clerk/clerk-expo";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RouteProps = RouteProp<RootStackParamList, "VisitsList">;
+
+interface VisitWithPhotos extends MedicalVisit {
+  photos: VisitPhoto[];
+}
 
 export default function VisitsListScreen() {
   const insets = useSafeAreaInsets();
@@ -30,7 +35,7 @@ export default function VisitsListScreen() {
   const { userId } = useAuth();
   const { childId } = route.params;
 
-  const [visits, setVisits] = useState<MedicalVisit[]>([]);
+  const [visits, setVisits] = useState<VisitWithPhotos[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [child, setChild] = useState<Child | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +48,19 @@ export default function VisitsListScreen() {
         ChildrenAPI.getById(childId, userId),
         DoctorsAPI.getAll(userId),
       ]);
-      setVisits(visitsData);
+      
+      const visitsWithPhotos = await Promise.all(
+        visitsData.map(async (visit) => {
+          try {
+            const photos = await VisitPhotosAPI.getByVisitId(visit.id);
+            return { ...visit, photos };
+          } catch {
+            return { ...visit, photos: [] };
+          }
+        })
+      );
+      
+      setVisits(visitsWithPhotos);
       setChild(childData);
       setDoctors(doctorsData);
     } catch (error) {
@@ -69,12 +86,12 @@ export default function VisitsListScreen() {
     navigation.navigate("AddVisit", { childId });
   };
 
-  const handleEdit = (visit: MedicalVisit) => {
+  const handleEdit = (visit: VisitWithPhotos) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("AddVisit", { childId, visitId: visit.id });
   };
 
-  const handleDelete = (visit: MedicalVisit) => {
+  const handleDelete = (visit: VisitWithPhotos) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     Alert.alert(
       "Eliminar Visita",
@@ -109,7 +126,7 @@ export default function VisitsListScreen() {
     });
   }, [navigation, child, theme.primary]);
 
-  const renderItem = ({ item }: { item: MedicalVisit }) => (
+  const renderItem = ({ item }: { item: VisitWithPhotos }) => (
     <Pressable
       style={[styles.card, { backgroundColor: theme.backgroundDefault }]}
       onPress={() => handleEdit(item)}
@@ -143,7 +160,39 @@ export default function VisitsListScreen() {
                 <ThemedText type="small">PC: {item.headCircumference} cm</ThemedText>
               </View>
             ) : null}
+            {item.photos.length > 0 ? (
+              <View style={[styles.badge, { backgroundColor: theme.primary + "20" }]}>
+                <Feather name="camera" size={12} color={theme.primary} />
+                <ThemedText type="small" style={{ marginLeft: 4, color: theme.primary }}>
+                  {item.photos.length}
+                </ThemedText>
+              </View>
+            ) : null}
           </View>
+          {item.photos.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.photosScroll}
+              contentContainerStyle={styles.photosContainer}
+            >
+              {item.photos.slice(0, 4).map((photo) => (
+                <Image
+                  key={photo.id}
+                  source={{ uri: photo.photoData }}
+                  style={styles.photoThumbnail}
+                  contentFit="cover"
+                />
+              ))}
+              {item.photos.length > 4 ? (
+                <View style={[styles.morePhotos, { backgroundColor: theme.primary }]}>
+                  <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                    +{item.photos.length - 4}
+                  </ThemedText>
+                </View>
+              ) : null}
+            </ScrollView>
+          ) : null}
         </View>
       </View>
       <Pressable
@@ -206,7 +255,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     padding: Spacing.lg,
     borderRadius: BorderRadius.md,
@@ -234,9 +283,29 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   badge: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: BorderRadius.full,
+  },
+  photosScroll: {
+    marginTop: Spacing.sm,
+  },
+  photosContainer: {
+    gap: Spacing.xs,
+  },
+  photoThumbnail: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.xs,
+  },
+  morePhotos: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.xs,
+    alignItems: "center",
+    justifyContent: "center",
   },
   deleteButton: {
     padding: Spacing.sm,
