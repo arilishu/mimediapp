@@ -135,7 +135,7 @@ export default function MedicationsListScreen() {
 
   const renderEmpty = () => (
     <EmptyState
-      image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
+      image={require("../../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
       title="Sin medicamentos"
       subtitle="Agrega los medicamentos frecuentes del familiar"
     />

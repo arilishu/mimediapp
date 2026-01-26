@@ -12,15 +12,16 @@ import { ThemedText } from "@/components/ThemedText";
 import { EmptyState } from "@/components/EmptyState";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { AllergiesAPI, ChildrenAPI } from "@/lib/api";
-import type { Allergy, Child } from "@/types";
+import { VisitsAPI, ChildrenAPI, DoctorsAPI } from "@/lib/api";
+import { formatDate } from "@/lib/utils";
+import type { MedicalVisit, Child, Doctor } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useAuth } from "@clerk/clerk-expo";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type RouteProps = RouteProp<RootStackParamList, "AllergiesList">;
+type RouteProps = RouteProp<RootStackParamList, "VisitsList">;
 
-export default function AllergiesListScreen() {
+export default function VisitsListScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
@@ -29,21 +30,24 @@ export default function AllergiesListScreen() {
   const { userId } = useAuth();
   const { childId } = route.params;
 
-  const [allergies, setAllergies] = useState<Allergy[]>([]);
+  const [visits, setVisits] = useState<MedicalVisit[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [child, setChild] = useState<Child | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     if (!userId) return;
     try {
-      const [allergiesData, childData] = await Promise.all([
-        AllergiesAPI.getByChildId(childId),
+      const [visitsData, childData, doctorsData] = await Promise.all([
+        VisitsAPI.getByChildId(childId),
         ChildrenAPI.getById(childId, userId),
+        DoctorsAPI.getAll(userId),
       ]);
-      setAllergies(allergiesData);
+      setVisits(visitsData);
       setChild(childData);
+      setDoctors(doctorsData);
     } catch (error) {
-      console.error("Error loading allergies:", error);
+      console.error("Error loading visits:", error);
     } finally {
       setIsLoading(false);
     }
@@ -55,21 +59,26 @@ export default function AllergiesListScreen() {
     }, [loadData])
   );
 
+  const getDoctorName = (doctorId: string) => {
+    const doctor = doctors.find((d) => d.id === doctorId);
+    return doctor ? `Dr. ${doctor.name}` : "";
+  };
+
   const handleAdd = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate("AddAllergy", { childId });
+    navigation.navigate("AddVisit", { childId });
   };
 
-  const handleEdit = (allergy: Allergy) => {
+  const handleEdit = (visit: MedicalVisit) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate("AddAllergy", { childId, allergyId: allergy.id });
+    navigation.navigate("AddVisit", { childId, visitId: visit.id });
   };
 
-  const handleDelete = (allergy: Allergy) => {
+  const handleDelete = (visit: MedicalVisit) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     Alert.alert(
-      "Eliminar Alergia",
-      `¿Estás seguro de eliminar "${allergy.name}"?`,
+      "Eliminar Visita",
+      `¿Estás seguro de eliminar la visita del ${formatDate(visit.date)}?`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -77,11 +86,11 @@ export default function AllergiesListScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await AllergiesAPI.delete(allergy.id);
+              await VisitsAPI.delete(visit.id);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               loadData();
             } catch (error) {
-              console.error("Error deleting allergy:", error);
+              console.error("Error deleting visit:", error);
             }
           },
         },
@@ -91,7 +100,7 @@ export default function AllergiesListScreen() {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: child?.name ? `Alergias de ${child.name}` : "Alergias",
+      headerTitle: child?.name ? `Visitas de ${child.name}` : "Visitas Médicas",
       headerRight: () => (
         <Pressable onPress={handleAdd} hitSlop={8}>
           <Feather name="plus" size={24} color={theme.primary} />
@@ -100,62 +109,65 @@ export default function AllergiesListScreen() {
     });
   }, [navigation, child, theme.primary]);
 
-  const getSeverityColor = (severity?: string) => {
-    switch (severity) {
-      case "severe":
-        return theme.error;
-      case "moderate":
-        return theme.accent;
-      default:
-        return theme.warning;
-    }
-  };
-
-  const renderItem = ({ item }: { item: Allergy }) => {
-    const severityColor = getSeverityColor(item.severity);
-    return (
-      <Pressable
-        style={[styles.card, { backgroundColor: theme.backgroundDefault }]}
-        onPress={() => handleEdit(item)}
-      >
-        <View style={styles.cardContent}>
-          <View style={[styles.iconContainer, { backgroundColor: severityColor + "20" }]}>
-            <Feather name="alert-circle" size={20} color={severityColor} />
-          </View>
-          <View style={styles.textContent}>
-            <ThemedText type="body" style={{ fontWeight: "600" }}>
-              {item.name}
+  const renderItem = ({ item }: { item: MedicalVisit }) => (
+    <Pressable
+      style={[styles.card, { backgroundColor: theme.backgroundDefault }]}
+      onPress={() => handleEdit(item)}
+    >
+      <View style={styles.cardContent}>
+        <View style={[styles.iconContainer, { backgroundColor: theme.primary + "20" }]}>
+          <Feather name="activity" size={20} color={theme.primary} />
+        </View>
+        <View style={styles.textContent}>
+          <ThemedText type="body" style={{ fontWeight: "600" }}>
+            {formatDate(item.date)}
+          </ThemedText>
+          {item.doctorId ? (
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+              {getDoctorName(item.doctorId)}
             </ThemedText>
-            {item.severity ? (
-              <ThemedText type="small" style={{ color: severityColor }}>
-                {item.severity === "severe" ? "Severa" : item.severity === "moderate" ? "Moderada" : "Leve"}
-              </ThemedText>
+          ) : null}
+          <View style={styles.badges}>
+            {item.weight ? (
+              <View style={[styles.badge, { backgroundColor: theme.secondary + "30" }]}>
+                <ThemedText type="small">{item.weight} kg</ThemedText>
+              </View>
+            ) : null}
+            {item.height ? (
+              <View style={[styles.badge, { backgroundColor: theme.info + "30" }]}>
+                <ThemedText type="small">{item.height} cm</ThemedText>
+              </View>
+            ) : null}
+            {item.headCircumference ? (
+              <View style={[styles.badge, { backgroundColor: theme.accent + "30" }]}>
+                <ThemedText type="small">PC: {item.headCircumference} cm</ThemedText>
+              </View>
             ) : null}
           </View>
         </View>
-        <Pressable
-          onPress={() => handleDelete(item)}
-          hitSlop={8}
-          style={[styles.deleteButton, { backgroundColor: theme.error + "15" }]}
-        >
-          <Feather name="trash-2" size={18} color={theme.error} />
-        </Pressable>
+      </View>
+      <Pressable
+        onPress={() => handleDelete(item)}
+        hitSlop={8}
+        style={[styles.deleteButton, { backgroundColor: theme.error + "15" }]}
+      >
+        <Feather name="trash-2" size={18} color={theme.error} />
       </Pressable>
-    );
-  };
+    </Pressable>
+  );
 
   const renderEmpty = () => (
     <EmptyState
-      image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
-      title="Sin alergias"
-      subtitle="Registra las alergias conocidas del familiar"
+      image={require("../../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
+      title="Sin visitas médicas"
+      subtitle="Registra las consultas médicas del familiar"
     />
   );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <FlatList
-        data={allergies}
+        data={visits}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={[
@@ -164,7 +176,7 @@ export default function AllergiesListScreen() {
             paddingTop: headerHeight + Spacing.lg,
             paddingBottom: insets.bottom + Spacing["2xl"],
           },
-          allergies.length === 0 && styles.emptyContainer,
+          visits.length === 0 && styles.emptyContainer,
         ]}
         scrollIndicatorInsets={{ bottom: insets.bottom }}
         ListEmptyComponent={!isLoading ? renderEmpty : null}
@@ -201,7 +213,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: Spacing.md,
     flex: 1,
   },
@@ -214,6 +226,17 @@ const styles = StyleSheet.create({
   },
   textContent: {
     flex: 1,
+  },
+  badges: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  badge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
   },
   deleteButton: {
     padding: Spacing.sm,

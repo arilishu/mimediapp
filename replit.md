@@ -11,7 +11,18 @@ La aplicacion centraliza datos clave de salud de toda la familia (hijos, padres,
 - **client/**: Contains all React Native code
   - **App.tsx**: Main application entry with navigation, fonts, and providers
   - **components/**: Reusable UI components (Card, Button, Input, EmptyState, etc.)
-  - **screens/**: Application screens organized by feature
+  - **screens/**: Application screens organized by feature in folders:
+    - **auth/**: SignInScreen, SignUpScreen
+    - **dashboard/**: DashboardScreen
+    - **children/**: AddChildScreen, EditChildScreen, ChildProfileScreen
+    - **visits/**: VisitsScreen, VisitsListScreen, AddVisitScreen
+    - **vaccines/**: VaccinesScreen
+    - **appointments/**: AppointmentsScreen, AddAppointmentScreen
+    - **allergies/**: AllergiesListScreen, AddAllergyScreen
+    - **diseases/**: DiseasesListScreen, AddDiseaseScreen
+    - **medications/**: MedicationsListScreen, AddMedicationScreen
+    - **doctors/**: DoctorsListScreen, AddDoctorScreen
+    - **emergency/**: EmergencyScreen, AddHospitalScreen
   - **navigation/**: Navigation structure with tab and stack navigators
   - **constants/theme.ts**: Design system colors, spacing, typography
   - **lib/api.ts**: API client with typed helpers for all entities
@@ -102,6 +113,8 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 - Password: replitClerk
 
 ## Recent Changes
+- Reorganized screens into feature-based folders (auth, dashboard, children, visits, etc.)
+- Added JWT authentication security on all API endpoints via @clerk/express
 - Added Sentry error monitoring for both frontend (sentry-expo) and backend (@sentry/node)
 - Added GitHub integration for pushing code to repository
 - Added Dashboard sections for "Mis Hijos", "Proximos Turnos", and "Vacunas Pendientes"

@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import EmergencyScreen from "@/screens/EmergencyScreen";
+import EmergencyScreen from "@/screens/emergency/EmergencyScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type EmergencyStackParamList = {

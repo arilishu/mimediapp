@@ -108,7 +108,7 @@ export default function VisitsScreen() {
     if (children.length === 0) {
       return (
         <EmptyState
-          image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
+          image={require("../../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
           title="Agrega un familiar primero"
           subtitle="Para registrar visitas medicas necesitas agregar un familiar"
         />
@@ -117,7 +117,7 @@ export default function VisitsScreen() {
 
     return (
       <EmptyState
-        image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
+        image={require("../../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
         title="Sin visitas registradas"
         subtitle="Agrega la primera visita medica"
         buttonText="Agregar Visita"

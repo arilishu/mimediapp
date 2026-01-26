@@ -138,7 +138,7 @@ export default function DoctorsListScreen() {
 
   const renderEmpty = () => (
     <EmptyState
-      image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
+      image={require("../../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
       title="Sin médicos"
       subtitle="Agrega los médicos de tu familia para agendar visitas y turnos"
     />

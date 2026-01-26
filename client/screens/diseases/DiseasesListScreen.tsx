@@ -136,7 +136,7 @@ export default function DiseasesListScreen() {
 
   const renderEmpty = () => (
     <EmptyState
-      image={require("../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
+      image={require("../../../assets/images/illustrations/empty_visits_calendar_stethoscope.png")}
       title="Sin enfermedades previas"
       subtitle="Registra las enfermedades que el familiar tuvo"
     />

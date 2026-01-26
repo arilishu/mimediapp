@@ -127,7 +127,7 @@ export default function DashboardScreen() {
     if (children.length === 0 && !isLoading) {
       return (
         <EmptyState
-          image={require("../../assets/images/illustrations/empty_children_teddy_bear.png")}
+          image={require("../../../assets/images/illustrations/empty_children_teddy_bear.png")}
           title="Agrega tu primer familiar"
           subtitle="Comienza a registrar la informacion medica de tu familia"
           buttonText="Agregar Familiar"
