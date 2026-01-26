@@ -89,6 +89,10 @@ export default function AddVisitScreen() {
     }
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await AudioModule.setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
       audioRecorder.record();
       setIsRecording(true);
     } catch (error) {
