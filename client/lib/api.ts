@@ -2,6 +2,7 @@ import { getApiUrl, getAuthToken } from "@/lib/query-client";
 import type {
   Child,
   MedicalVisit,
+  VisitPhoto,
   Doctor,
   Medication,
   Vaccine,
@@ -73,13 +74,13 @@ export const VisitsAPI = {
   getByChildId: (childId: string) =>
     fetchJson<MedicalVisit[]>(`/api/visits?childId=${childId}`),
   
-  create: (data: Omit<MedicalVisit, "id" | "createdAt">) =>
+  create: (data: Omit<MedicalVisit, "id" | "createdAt" | "photos">) =>
     fetchJson<MedicalVisit>("/api/visits", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   
-  update: (id: string, data: Partial<MedicalVisit>) =>
+  update: (id: string, data: Partial<Omit<MedicalVisit, "photos">>) =>
     fetchJson<MedicalVisit>(`/api/visits/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -87,6 +88,23 @@ export const VisitsAPI = {
   
   delete: (id: string) =>
     fetchJson<{ success: boolean }>(`/api/visits/${id}`, {
+      method: "DELETE",
+    }),
+};
+
+// ==================== VISIT PHOTOS API ====================
+export const VisitPhotosAPI = {
+  getByVisitId: (visitId: string) =>
+    fetchJson<VisitPhoto[]>(`/api/visit-photos?visitId=${visitId}`),
+  
+  create: (visitId: string, photoData: string) =>
+    fetchJson<VisitPhoto>("/api/visit-photos", {
+      method: "POST",
+      body: JSON.stringify({ visitId, photoData }),
+    }),
+  
+  delete: (id: string) =>
+    fetchJson<{ success: boolean }>(`/api/visit-photos/${id}`, {
       method: "DELETE",
     }),
 };
