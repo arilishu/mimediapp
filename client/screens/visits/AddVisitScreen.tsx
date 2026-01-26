@@ -11,16 +11,13 @@ import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "@clerk/clerk-expo";
 import { Image } from "expo-image";
-import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
-import * as FileSystem from "expo-file-system/legacy";
-
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { VisitsAPI, DoctorsAPI, VisitPhotosAPI, TranscriptionAPI } from "@/lib/api";
+import { VisitsAPI, DoctorsAPI, VisitPhotosAPI } from "@/lib/api";
 import type { Doctor, VisitPhoto } from "@/types";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -65,98 +62,6 @@ export default function AddVisitScreen() {
   const [cameraPermission, requestCameraPermission] = ImagePicker.useCameraPermissions();
   const [mediaPermission, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
 
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [audioPermissionGranted, setAudioPermissionGranted] = useState(false);
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const recordingUriRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    checkAudioPermission();
-  }, []);
-
-  useEffect(() => {
-    if (audioRecorder.uri && isRecording) {
-      recordingUriRef.current = audioRecorder.uri;
-    }
-  }, [audioRecorder.uri, isRecording]);
-
-  const checkAudioPermission = async () => {
-    const status = await AudioModule.requestRecordingPermissionsAsync();
-    setAudioPermissionGranted(status.granted);
-  };
-
-  const startRecording = async () => {
-    if (!audioPermissionGranted) {
-      const status = await AudioModule.requestRecordingPermissionsAsync();
-      if (!status.granted) {
-        return;
-      }
-      setAudioPermissionGranted(true);
-    }
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await AudioModule.setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-      });
-      recordingUriRef.current = null;
-      audioRecorder.record();
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Error starting recording:", error);
-    }
-  };
-
-  const stopRecording = async () => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
-      const savedUri = recordingUriRef.current;
-      
-      if (savedUri) {
-        setIsTranscribing(true);
-        try {
-          const response = await fetch(savedUri);
-          const blob = await response.blob();
-          
-          const reader = new FileReader();
-          const base64Promise = new Promise<string>((resolve, reject) => {
-            reader.onloadend = () => {
-              const base64data = reader.result as string;
-              const base64 = base64data.split(",")[1];
-              resolve(base64);
-            };
-            reader.onerror = reject;
-          });
-          reader.readAsDataURL(blob);
-          const base64Audio = await base64Promise;
-          
-          await audioRecorder.stop();
-          setIsRecording(false);
-          
-          const result = await TranscriptionAPI.transcribe(base64Audio);
-          if (result.transcript) {
-            setNotes((prev) => (prev ? prev + "\n" + result.transcript : result.transcript));
-          }
-        } catch (error) {
-          console.error("Error transcribing audio:", error);
-          await audioRecorder.stop();
-          setIsRecording(false);
-        } finally {
-          setIsTranscribing(false);
-          recordingUriRef.current = null;
-        }
-      } else {
-        await audioRecorder.stop();
-        setIsRecording(false);
-      }
-    } catch (error) {
-      console.error("Error stopping recording:", error);
-      setIsRecording(false);
-      recordingUriRef.current = null;
-    }
-  };
 
   useEffect(() => {
     loadDoctors();
@@ -529,35 +434,9 @@ export default function AddVisitScreen() {
         keyboardType="decimal-pad"
       />
 
-      <View style={styles.notesHeader}>
-        <ThemedText type="small" style={{ color: theme.text, fontWeight: "600" }}>
-          Notas / Indicaciones
-        </ThemedText>
-        <Pressable
-          onPress={isRecording ? stopRecording : startRecording}
-          disabled={isTranscribing}
-          style={[
-            styles.voiceButton,
-            {
-              backgroundColor: isRecording ? theme.error : theme.primary,
-              opacity: isTranscribing ? 0.5 : 1,
-            },
-          ]}
-        >
-          {isTranscribing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Feather
-              name={isRecording ? "stop-circle" : "mic"}
-              size={16}
-              color="#FFFFFF"
-            />
-          )}
-          <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600", marginLeft: 4 }}>
-            {isTranscribing ? "Transcribiendo..." : isRecording ? "Detener" : "Voz"}
-          </ThemedText>
-        </Pressable>
-      </View>
+      <ThemedText type="small" style={{ color: theme.text, fontWeight: "600", marginBottom: Spacing.xs }}>
+        Notas / Indicaciones
+      </ThemedText>
       <Input
         placeholder="Observaciones de la consulta..."
         value={notes}
@@ -695,19 +574,6 @@ const styles = StyleSheet.create({
   },
   halfInput: {
     flex: 1,
-  },
-  notesHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.xs,
-  },
-  voiceButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
   },
   notesInput: {
     height: 100,
