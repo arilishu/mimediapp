@@ -69,10 +69,17 @@ export default function AddVisitScreen() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioPermissionGranted, setAudioPermissionGranted] = useState(false);
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recordingUriRef = useRef<string | null>(null);
 
   useEffect(() => {
     checkAudioPermission();
   }, []);
+
+  useEffect(() => {
+    if (audioRecorder.uri && isRecording) {
+      recordingUriRef.current = audioRecorder.uri;
+    }
+  }, [audioRecorder.uri, isRecording]);
 
   const checkAudioPermission = async () => {
     const status = await AudioModule.requestRecordingPermissionsAsync();
@@ -93,6 +100,7 @@ export default function AddVisitScreen() {
         allowsRecording: true,
         playsInSilentMode: true,
       });
+      recordingUriRef.current = null;
       audioRecorder.record();
       setIsRecording(true);
     } catch (error) {
@@ -104,39 +112,49 @@ export default function AddVisitScreen() {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      await audioRecorder.stop();
-      setIsRecording(false);
+      const savedUri = recordingUriRef.current;
       
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const recordingUri = audioRecorder.uri;
-      
-      if (recordingUri) {
+      if (savedUri) {
         setIsTranscribing(true);
         try {
-          const tempPath = `${FileSystem.cacheDirectory}voice_note_${Date.now()}.m4a`;
-          await FileSystem.copyAsync({
-            from: recordingUri,
-            to: tempPath,
-          });
+          const response = await fetch(savedUri);
+          const blob = await response.blob();
           
-          const base64Audio = await FileSystem.readAsStringAsync(tempPath, {
-            encoding: "base64",
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve, reject) => {
+            reader.onloadend = () => {
+              const base64data = reader.result as string;
+              const base64 = base64data.split(",")[1];
+              resolve(base64);
+            };
+            reader.onerror = reject;
           });
+          reader.readAsDataURL(blob);
+          const base64Audio = await base64Promise;
+          
+          await audioRecorder.stop();
+          setIsRecording(false);
+          
           const result = await TranscriptionAPI.transcribe(base64Audio);
           if (result.transcript) {
             setNotes((prev) => (prev ? prev + "\n" + result.transcript : result.transcript));
           }
-          await FileSystem.deleteAsync(tempPath, { idempotent: true });
         } catch (error) {
           console.error("Error transcribing audio:", error);
+          await audioRecorder.stop();
+          setIsRecording(false);
         } finally {
           setIsTranscribing(false);
+          recordingUriRef.current = null;
         }
+      } else {
+        await audioRecorder.stop();
+        setIsRecording(false);
       }
     } catch (error) {
       console.error("Error stopping recording:", error);
       setIsRecording(false);
+      recordingUriRef.current = null;
     }
   };
 
