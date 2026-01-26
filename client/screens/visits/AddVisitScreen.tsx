@@ -110,7 +110,7 @@ export default function AddVisitScreen() {
         setIsTranscribing(true);
         try {
           const base64Audio = await FileSystem.readAsStringAsync(audioRecorder.uri, {
-            encoding: FileSystem.EncodingType.Base64,
+            encoding: "base64",
           });
           const result = await TranscriptionAPI.transcribe(base64Audio);
           if (result.transcript) {
@@ -500,7 +500,7 @@ export default function AddVisitScreen() {
       />
 
       <View style={styles.notesHeader}>
-        <ThemedText type="label" style={{ color: theme.text }}>
+        <ThemedText type="small" style={{ color: theme.text, fontWeight: "600" }}>
           Notas / Indicaciones
         </ThemedText>
         <Pressable
