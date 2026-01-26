@@ -1,4 +1,4 @@
-import { getApiUrl } from "@/lib/query-client";
+import { getApiUrl, getAuthToken } from "@/lib/query-client";
 import type {
   Child,
   MedicalVisit,
@@ -16,10 +16,20 @@ const apiUrl = getApiUrl();
 
 async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
   const url = new URL(path, apiUrl).toString();
+  const token = await getAuthToken();
+  
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
   const response = await fetch(url, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...headers,
       ...options?.headers,
     },
   });

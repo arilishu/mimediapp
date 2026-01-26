@@ -16,7 +16,7 @@ import {
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/lib/query-client";
+import { queryClient, setAuthTokenGetter } from "@/lib/query-client";
 import { tokenCache } from "@/lib/clerk";
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
 
@@ -34,11 +34,15 @@ if (!clerkPublishableKey) {
 }
 
 function AuthenticatedApp() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const { theme } = useTheme();
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
   const hasRequestedPermissions = useRef(false);
+
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+  }, [getToken]);
 
   useEffect(() => {
     if (isSignedIn && Platform.OS !== "web" && !hasRequestedPermissions.current) {
