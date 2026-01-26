@@ -103,19 +103,31 @@ export default function AddVisitScreen() {
   const stopRecording = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
       await audioRecorder.stop();
       setIsRecording(false);
-
-      if (audioRecorder.uri) {
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const recordingUri = audioRecorder.uri;
+      
+      if (recordingUri) {
         setIsTranscribing(true);
         try {
-          const base64Audio = await FileSystem.readAsStringAsync(audioRecorder.uri, {
+          const tempPath = `${FileSystem.cacheDirectory}voice_note_${Date.now()}.m4a`;
+          await FileSystem.copyAsync({
+            from: recordingUri,
+            to: tempPath,
+          });
+          
+          const base64Audio = await FileSystem.readAsStringAsync(tempPath, {
             encoding: "base64",
           });
           const result = await TranscriptionAPI.transcribe(base64Audio);
           if (result.transcript) {
             setNotes((prev) => (prev ? prev + "\n" + result.transcript : result.transcript));
           }
+          await FileSystem.deleteAsync(tempPath, { idempotent: true });
         } catch (error) {
           console.error("Error transcribing audio:", error);
         } finally {
