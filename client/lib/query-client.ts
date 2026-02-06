@@ -17,12 +17,24 @@ export function getApiUrl(): string {
 }
 
 let authTokenGetter: (() => Promise<string | null>) | null = null;
+let authTokenGetterResolve: (() => void) | null = null;
+const authTokenGetterReady = new Promise<void>((resolve) => {
+  authTokenGetterResolve = resolve;
+});
 
 export function setAuthTokenGetter(getter: () => Promise<string | null>) {
   authTokenGetter = getter;
+  if (authTokenGetterResolve) {
+    authTokenGetterResolve();
+    authTokenGetterResolve = null;
+  }
 }
 
 export async function getAuthToken(): Promise<string | null> {
+  if (!authTokenGetter) {
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
+    await Promise.race([authTokenGetterReady, timeout]);
+  }
   if (authTokenGetter) {
     return authTokenGetter();
   }
