@@ -1,9 +1,8 @@
+<<<<<<< HEAD
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
-import { getAuth } from "@clerk/express";
 import pg from "pg";
 import { v4 as uuidv4 } from "uuid";
-import { transcribeAudio } from "./replit_integrations/audio/transcribe";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -18,23 +17,12 @@ function generateShareCode(): string {
   return code;
 }
 
-function requireAuth(req: Request, res: Response): string | null {
-  const auth = getAuth(req);
-  if (!auth.userId) {
-    res.status(401).json({ error: "Unauthorized" });
-    return null;
-  }
-  return auth.userId;
-}
-
 export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== CHILDREN ====================
   app.get("/api/children", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-      
-      const userId = authUserId;
+      const userId = req.query.userId as string;
+      if (!userId) return res.status(400).json({ error: "userId required" });
 
       // Get owned children + shared children
       const result = await pool.query(
@@ -69,11 +57,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/children/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
-      const userId = authUserId;
+      const userId = req.query.userId as string;
 
       const result = await pool.query(
         `SELECT c.*, 
@@ -109,11 +94,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/children", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
-      const { name, birthDate, sex, avatarIndex } = req.body;
-      if (!name || !birthDate || !sex) {
+      const { name, birthDate, sex, avatarIndex, ownerId } = req.body;
+      if (!name || !birthDate || !sex || !ownerId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
@@ -122,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `INSERT INTO children (id, owner_id, name, birth_date, sex, avatar_index)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [id, authUserId, name, birthDate, sex, avatarIndex ?? 0]
+        [id, ownerId, name, birthDate, sex, avatarIndex ?? 0]
       );
 
       const row = result.rows[0];
@@ -143,23 +125,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/children/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { name, birthDate, sex, avatarIndex } = req.body;
-
-      // Verify user owns this child or has write access
-      const accessCheck = await pool.query(
-        `SELECT c.id FROM children c
-         LEFT JOIN child_access ca ON c.id = ca.child_id AND ca.user_id = $2
-         WHERE c.id = $1 AND (c.owner_id = $2 OR (ca.user_id = $2 AND ca.is_read_only = false))`,
-        [id, authUserId]
-      );
-
-      if (accessCheck.rows.length === 0) {
-        return res.status(403).json({ error: "Not authorized to update this child" });
-      }
 
       const result = await pool.query(
         `UPDATE children SET name = COALESCE($2, name), birth_date = COALESCE($3, birth_date),
@@ -190,20 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/children/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
-
-      // Verify user owns this child (only owner can delete)
-      const ownerCheck = await pool.query(
-        "SELECT id FROM children WHERE id = $1 AND owner_id = $2",
-        [id, authUserId]
-      );
-
-      if (ownerCheck.rows.length === 0) {
-        return res.status(403).json({ error: "Not authorized to delete this child" });
-      }
       
       // Delete all related data first
       await pool.query("DELETE FROM medical_visits WHERE child_id = $1", [id]);
@@ -227,9 +181,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== MEDICAL VISITS ====================
   app.get("/api/visits", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const childId = req.query.childId as string;
       if (!childId) return res.status(400).json({ error: "childId required" });
 
@@ -259,9 +210,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/visits", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, doctorId, date, weight, height, headCircumference, notes } = req.body;
       if (!childId || !date) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -295,9 +243,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/visits/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { doctorId, date, weight, height, headCircumference, notes } = req.body;
 
@@ -333,9 +278,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/visits/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM medical_visits WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -345,85 +287,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ==================== VISIT PHOTOS ====================
-  app.get("/api/visit-photos", async (req: Request, res: Response) => {
-    try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
-      const visitId = req.query.visitId as string;
-      if (!visitId) return res.status(400).json({ error: "visitId required" });
-
-      const result = await pool.query(
-        "SELECT * FROM visit_photos WHERE visit_id = $1 ORDER BY created_at DESC",
-        [visitId]
-      );
-
-      const photos = result.rows.map((row) => ({
-        id: row.id,
-        visitId: row.visit_id,
-        photoData: row.photo_data,
-        createdAt: row.created_at,
-      }));
-
-      return res.json(photos);
-    } catch (error) {
-      console.error("Error fetching visit photos:", error);
-      return res.status(500).json({ error: "Failed to fetch photos" });
-    }
-  });
-
-  app.post("/api/visit-photos", async (req: Request, res: Response) => {
-    try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
-      const { visitId, photoData } = req.body;
-      if (!visitId || !photoData) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      const id = uuidv4();
-      const result = await pool.query(
-        `INSERT INTO visit_photos (id, visit_id, photo_data)
-         VALUES ($1, $2, $3)
-         RETURNING *`,
-        [id, visitId, photoData]
-      );
-
-      const row = result.rows[0];
-      return res.json({
-        id: row.id,
-        visitId: row.visit_id,
-        photoData: row.photo_data,
-        createdAt: row.created_at,
-      });
-    } catch (error) {
-      console.error("Error creating visit photo:", error);
-      return res.status(500).json({ error: "Failed to create photo" });
-    }
-  });
-
-  app.delete("/api/visit-photos/:id", async (req: Request, res: Response) => {
-    try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
-      const { id } = req.params;
-      await pool.query("DELETE FROM visit_photos WHERE id = $1", [id]);
-      return res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting visit photo:", error);
-      return res.status(500).json({ error: "Failed to delete photo" });
-    }
-  });
-
   // ==================== VACCINES ====================
   app.get("/api/vaccines", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const childId = req.query.childId as string;
       if (!childId) return res.status(400).json({ error: "childId required" });
 
@@ -451,9 +317,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/vaccines", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, name, recommendedAge, appliedDate, isApplied } = req.body;
       if (!childId || !name || !recommendedAge) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -485,9 +348,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/vaccines/batch", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, vaccines } = req.body;
       if (!childId || !vaccines || !Array.isArray(vaccines)) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -521,9 +381,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/vaccines/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { appliedDate, isApplied } = req.body;
 
@@ -555,9 +412,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/vaccines/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM vaccines WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -570,9 +424,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== APPOINTMENTS ====================
   app.get("/api/appointments", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const childId = req.query.childId as string;
       if (!childId) return res.status(400).json({ error: "childId required" });
 
@@ -600,9 +451,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/appointments", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, doctorId, date, time, notes } = req.body;
       if (!childId || !date || !time) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -634,9 +482,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/appointments/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { doctorId, date, time, notes } = req.body;
 
@@ -669,9 +514,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/appointments/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM appointments WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -684,10 +526,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all upcoming appointments for a user (across all their children)
   app.get("/api/appointments/user/:userId", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
+      const { userId } = req.params;
+      if (!userId) return res.status(400).json({ error: "userId required" });
 
-      // Use authUserId instead of URL param
       const result = await pool.query(
         `SELECT a.*, c.name as child_name 
          FROM appointments a
@@ -697,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
            AND a.date::date >= CURRENT_DATE
          ORDER BY a.date::date ASC, a.time ASC
          LIMIT 5`,
-        [authUserId]
+        [userId]
       );
 
       const appointments = result.rows.map((row) => ({
@@ -721,10 +562,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all pending vaccines for a user (across all their children)
   app.get("/api/vaccines/user/:userId", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
+      const { userId } = req.params;
+      if (!userId) return res.status(400).json({ error: "userId required" });
 
-      // Use authUserId instead of URL param
       const result = await pool.query(
         `SELECT v.*, c.name as child_name 
          FROM vaccines v
@@ -734,7 +574,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
            AND v.is_applied = false
          ORDER BY c.name ASC, v.recommended_age ASC
          LIMIT 5`,
-        [authUserId]
+        [userId]
       );
 
       const vaccines = result.rows.map((row) => ({
@@ -758,9 +598,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== ALLERGIES ====================
   app.get("/api/allergies", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const childId = req.query.childId as string;
       if (!childId) return res.status(400).json({ error: "childId required" });
 
@@ -787,9 +624,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/allergies", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, name, severity, notes } = req.body;
       if (!childId || !name) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -820,9 +654,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/allergies/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { name, severity, notes } = req.body;
 
@@ -853,9 +684,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/allergies/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM allergies WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -868,9 +696,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== PAST DISEASES ====================
   app.get("/api/diseases", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const childId = req.query.childId as string;
       if (!childId) return res.status(400).json({ error: "childId required" });
 
@@ -897,9 +722,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/diseases", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, name, date, notes } = req.body;
       if (!childId || !name || !date) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -930,9 +752,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/diseases/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { name, date, notes } = req.body;
 
@@ -963,9 +782,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/diseases/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM past_diseases WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -978,13 +794,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== DOCTORS ====================
   app.get("/api/doctors", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
+      const userId = req.query.userId as string;
+      if (!userId) return res.status(400).json({ error: "userId required" });
 
-      // Use authUserId instead of req.query.userId
       const result = await pool.query(
         "SELECT * FROM doctors WHERE owner_id = $1 ORDER BY name ASC",
-        [authUserId]
+        [userId]
       );
 
       const doctors = result.rows.map((row) => ({
@@ -1005,11 +820,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/doctors", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
-      const { name, specialty, phone, address } = req.body;
-      if (!name || !specialty) {
+      const { name, specialty, phone, address, ownerId } = req.body;
+      if (!name || !specialty || !ownerId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
@@ -1018,7 +830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `INSERT INTO doctors (id, owner_id, name, specialty, phone, address)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [id, authUserId, name, specialty, phone || "", address || ""]
+        [id, ownerId, name, specialty, phone || "", address || ""]
       );
 
       const row = result.rows[0];
@@ -1038,9 +850,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/doctors/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { name, specialty, phone, address } = req.body;
 
@@ -1071,9 +880,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/doctors/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM doctors WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -1086,9 +892,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== MEDICATIONS ====================
   app.get("/api/medications", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const childId = req.query.childId as string;
       if (!childId) return res.status(400).json({ error: "childId required" });
 
@@ -1117,9 +920,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/medications", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, name, symptom, dose, category, recommendedDose } = req.body;
       if (!childId || !name || !dose || !category) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -1152,9 +952,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/medications/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { name, symptom, dose, category, recommendedDose } = req.body;
 
@@ -1188,9 +985,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/medications/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM medications WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -1203,13 +997,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== HOSPITALS ====================
   app.get("/api/hospitals", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
+      const userId = req.query.userId as string;
+      if (!userId) return res.status(400).json({ error: "userId required" });
 
-      // Use authUserId instead of req.query.userId
       const result = await pool.query(
         "SELECT * FROM hospitals WHERE owner_id = $1 ORDER BY name ASC",
-        [authUserId]
+        [userId]
       );
 
       const hospitals = result.rows.map((row) => ({
@@ -1230,11 +1023,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/hospitals", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
-      const { name, address, phone, specialties } = req.body;
-      if (!name || !address) {
+      const { name, address, phone, specialties, ownerId } = req.body;
+      if (!name || !address || !ownerId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
@@ -1243,7 +1033,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `INSERT INTO hospitals (id, owner_id, name, address, phone, specialties)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [id, authUserId, name, address, phone || "", specialties || []]
+        [id, ownerId, name, address, phone || "", specialties || []]
       );
 
       const row = result.rows[0];
@@ -1263,9 +1053,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/hospitals/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       const { name, address, phone, specialties } = req.body;
 
@@ -1297,9 +1084,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/hospitals/:id", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { id } = req.params;
       await pool.query("DELETE FROM hospitals WHERE id = $1", [id]);
       return res.json({ success: true });
@@ -1312,19 +1096,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== SHARE CODES ====================
   app.post("/api/share-codes", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
+      const { childId, ownerId, childName, childBirthDate, childSex, childAvatarIndex, isReadOnly } = req.body;
 
-      const { childId, childName, childBirthDate, childSex, childAvatarIndex, isReadOnly } = req.body;
-
-      if (!childId || !childName) {
+      if (!childId || !ownerId || !childName) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Use authUserId as ownerId
       const existingResult = await pool.query(
         "SELECT * FROM share_codes WHERE child_id = $1 AND owner_id = $2",
-        [childId, authUserId]
+        [childId, ownerId]
       );
 
       if (existingResult.rows.length > 0) {
@@ -1361,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `INSERT INTO share_codes (code, child_id, owner_id, child_name, child_birth_date, child_sex, child_avatar_index, is_read_only)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
-        [code, childId, authUserId, childName, childBirthDate, childSex, childAvatarIndex, isReadOnly ?? true]
+        [code, childId, ownerId, childName, childBirthDate, childSex, childAvatarIndex, isReadOnly ?? true]
       );
 
       const newCode = result.rows[0];
@@ -1381,9 +1161,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/share-codes/:code", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const code = req.params.code as string;
 
       const result = await pool.query(
@@ -1416,15 +1193,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/share-codes/:childId", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId } = req.params;
+      const { ownerId } = req.body;
 
-      // Use authUserId as ownerId
       await pool.query(
         "DELETE FROM share_codes WHERE child_id = $1 AND owner_id = $2",
-        [childId, authUserId]
+        [childId, ownerId]
       );
 
       return res.json({ success: true });
@@ -1436,16 +1210,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/share-codes/:childId", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId } = req.params;
-      const { isReadOnly } = req.body;
+      const { ownerId, isReadOnly } = req.body;
 
-      // Use authUserId as ownerId
       const result = await pool.query(
         "UPDATE share_codes SET is_read_only = $1 WHERE child_id = $2 AND owner_id = $3 RETURNING *",
-        [isReadOnly, childId, authUserId]
+        [isReadOnly, childId, ownerId]
       );
 
       if (result.rows.length === 0) {
@@ -1469,15 +1239,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/share-codes/child/:childId", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId } = req.params;
+      const ownerId = req.query.ownerId as string;
 
-      // Use authUserId as ownerId
       const result = await pool.query(
         "SELECT * FROM share_codes WHERE child_id = $1 AND owner_id = $2",
-        [childId, authUserId]
+        [childId, ownerId]
       );
 
       if (result.rows.length === 0) {
@@ -1502,9 +1269,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== CHILD ACCESS (for shared children) ====================
   app.post("/api/child-access", async (req: Request, res: Response) => {
     try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
       const { childId, userId, isReadOnly } = req.body;
       if (!childId || !userId) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -1523,27 +1287,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: "Failed to create child access" });
     }
   });
+=======
+import type { Express } from "express";
+import { createServer, type Server } from "node:http";
 
-  // ==================== AUDIO TRANSCRIPTION ====================
-  app.post("/api/transcribe", async (req: Request, res: Response) => {
-    try {
-      const authUserId = requireAuth(req, res);
-      if (!authUserId) return;
-
-      const { audio } = req.body;
-      if (!audio) {
-        return res.status(400).json({ error: "Audio data is required" });
-      }
-
-      const audioBuffer = Buffer.from(audio, "base64");
-      const transcript = await transcribeAudio(audioBuffer);
-
-      return res.json({ transcript });
-    } catch (error) {
-      console.error("Error transcribing audio:", error);
-      return res.status(500).json({ error: "Failed to transcribe audio" });
-    }
-  });
+export async function registerRoutes(app: Express): Promise<Server> {
+  // put application routes here
+  // prefix all routes with /api
+>>>>>>> 3a0bcec (Extracted stack files)
 
   const httpServer = createServer(app);
 

@@ -1,26 +1,32 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+<<<<<<< HEAD
 
 import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ChildProfileScreen from "@/screens/children/ChildProfileScreen";
-import AddChildScreen from "@/screens/children/AddChildScreen";
-import EditChildScreen from "@/screens/children/EditChildScreen";
-import AddVisitScreen from "@/screens/visits/AddVisitScreen";
-import VisitsListScreen from "@/screens/visits/VisitsListScreen";
-import AddAppointmentScreen from "@/screens/appointments/AddAppointmentScreen";
-import AddHospitalScreen from "@/screens/emergency/AddHospitalScreen";
-import MedicationsListScreen from "@/screens/medications/MedicationsListScreen";
-import AddMedicationScreen from "@/screens/medications/AddMedicationScreen";
-import AllergiesListScreen from "@/screens/allergies/AllergiesListScreen";
-import AddAllergyScreen from "@/screens/allergies/AddAllergyScreen";
-import DiseasesListScreen from "@/screens/diseases/DiseasesListScreen";
-import AddDiseaseScreen from "@/screens/diseases/AddDiseaseScreen";
-import DoctorsListScreen from "@/screens/doctors/DoctorsListScreen";
-import AddDoctorScreen from "@/screens/doctors/AddDoctorScreen";
+import ChildProfileScreen from "@/screens/ChildProfileScreen";
+import AddChildScreen from "@/screens/AddChildScreen";
+import EditChildScreen from "@/screens/EditChildScreen";
+import AddVisitScreen from "@/screens/AddVisitScreen";
+import AddAppointmentScreen from "@/screens/AddAppointmentScreen";
+import AddHospitalScreen from "@/screens/AddHospitalScreen";
+import MedicationsListScreen from "@/screens/MedicationsListScreen";
+import AddMedicationScreen from "@/screens/AddMedicationScreen";
+import AllergiesListScreen from "@/screens/AllergiesListScreen";
+import AddAllergyScreen from "@/screens/AddAllergyScreen";
+import DiseasesListScreen from "@/screens/DiseasesListScreen";
+import AddDiseaseScreen from "@/screens/AddDiseaseScreen";
+import VisitsListScreen from "@/screens/VisitsListScreen";
+import DoctorsListScreen from "@/screens/DoctorsListScreen";
+import AddDoctorScreen from "@/screens/AddDoctorScreen";
+=======
+import MainTabNavigator from "@/navigation/MainTabNavigator";
+import ModalScreen from "@/screens/ModalScreen";
+>>>>>>> 3a0bcec (Extracted stack files)
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
   Main: undefined;
+<<<<<<< HEAD
   ChildProfile: { childId: string };
   AddChild: undefined;
   EditChild: { childId: string };
@@ -36,6 +42,9 @@ export type RootStackParamList = {
   AddDisease: { childId: string; diseaseId?: string };
   DoctorsList: undefined;
   AddDoctor: { doctorId?: string };
+=======
+  Modal: undefined;
+>>>>>>> 3a0bcec (Extracted stack files)
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -51,6 +60,7 @@ export default function RootStackNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+<<<<<<< HEAD
         name="ChildProfile"
         component={ChildProfileScreen}
         options={{
@@ -162,6 +172,13 @@ export default function RootStackNavigator() {
         options={{
           presentation: "modal",
           headerTitle: "Médico",
+=======
+        name="Modal"
+        component={ModalScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Modal",
+>>>>>>> 3a0bcec (Extracted stack files)
         }}
       />
     </Stack.Navigator>

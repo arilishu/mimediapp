@@ -1,19 +1,11 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
-import * as Sentry from "@sentry/node";
-import { clerkMiddleware } from "./middleware/auth";
 import { registerRoutes } from "./routes";
 import * as fs from "fs";
 import * as path from "path";
 
 const app = express();
 const log = console.log;
-
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  tracesSampleRate: 1.0,
-  environment: process.env.NODE_ENV || "development",
-});
 
 declare module "http" {
   interface IncomingMessage {
@@ -48,7 +40,7 @@ function setupCors(app: express.Application) {
         "Access-Control-Allow-Methods",
         "GET, POST, PUT, DELETE, OPTIONS",
       );
-      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.header("Access-Control-Allow-Headers", "Content-Type");
       res.header("Access-Control-Allow-Credentials", "true");
     }
 
@@ -63,14 +55,13 @@ function setupCors(app: express.Application) {
 function setupBodyParsing(app: express.Application) {
   app.use(
     express.json({
-      limit: '2mb',
       verify: (req, _res, buf) => {
         req.rawBody = buf;
       },
     }),
   );
 
-  app.use(express.urlencoded({ extended: false, limit: '2mb' }));
+  app.use(express.urlencoded({ extended: false }));
 }
 
 function setupRequestLogging(app: express.Application) {
@@ -225,8 +216,6 @@ function setupErrorHandler(app: express.Application) {
     const message = error.message || "Internal Server Error";
 
     console.error("Internal Server Error:", err);
-    
-    Sentry.captureException(err);
 
     if (res.headersSent) {
       return next(err);
@@ -239,9 +228,6 @@ function setupErrorHandler(app: express.Application) {
 (async () => {
   setupCors(app);
   setupBodyParsing(app);
-  
-  app.use(clerkMiddleware());
-  
   setupRequestLogging(app);
 
   configureExpoAndLanding(app);

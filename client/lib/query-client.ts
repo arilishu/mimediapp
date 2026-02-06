@@ -16,31 +16,6 @@ export function getApiUrl(): string {
   return url.href;
 }
 
-let authTokenGetter: (() => Promise<string | null>) | null = null;
-let authTokenGetterResolve: (() => void) | null = null;
-const authTokenGetterReady = new Promise<void>((resolve) => {
-  authTokenGetterResolve = resolve;
-});
-
-export function setAuthTokenGetter(getter: () => Promise<string | null>) {
-  authTokenGetter = getter;
-  if (authTokenGetterResolve) {
-    authTokenGetterResolve();
-    authTokenGetterResolve = null;
-  }
-}
-
-export async function getAuthToken(): Promise<string | null> {
-  if (!authTokenGetter) {
-    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
-    await Promise.race([authTokenGetterReady, timeout]);
-  }
-  if (authTokenGetter) {
-    return authTokenGetter();
-  }
-  return null;
-}
-
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -55,21 +30,10 @@ export async function apiRequest(
 ): Promise<Response> {
   const baseUrl = getApiUrl();
   const url = new URL(route, baseUrl);
-  
-  const token = await getAuthToken();
-  const headers: Record<string, string> = {};
-  
-  if (data) {
-    headers["Content-Type"] = "application/json";
-  }
-  
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   const res = await fetch(url, {
     method,
-    headers,
+    headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -86,16 +50,8 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const baseUrl = getApiUrl();
     const url = new URL(queryKey.join("/") as string, baseUrl);
-    
-    const token = await getAuthToken();
-    const headers: Record<string, string> = {};
-    
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
 
     const res = await fetch(url, {
-      headers,
       credentials: "include",
     });
 

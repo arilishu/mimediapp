@@ -1,10 +1,16 @@
+<<<<<<< HEAD
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View, ActivityIndicator, Platform } from "react-native";
+=======
+import React from "react";
+import { StyleSheet } from "react-native";
+>>>>>>> 3a0bcec (Extracted stack files)
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+<<<<<<< HEAD
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import {
@@ -16,7 +22,7 @@ import {
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient, setAuthTokenGetter } from "@/lib/query-client";
+import { queryClient } from "@/lib/query-client";
 import { tokenCache } from "@/lib/clerk";
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
 
@@ -34,15 +40,11 @@ if (!clerkPublishableKey) {
 }
 
 function AuthenticatedApp() {
-  const { isSignedIn, isLoaded, getToken } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const { theme } = useTheme();
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
   const hasRequestedPermissions = useRef(false);
-
-  useEffect(() => {
-    setAuthTokenGetter(() => getToken());
-  }, [getToken]);
 
   useEffect(() => {
     if (isSignedIn && Platform.OS !== "web" && !hasRequestedPermissions.current) {
@@ -117,6 +119,14 @@ function AppContent() {
     </ClerkProvider>
   );
 }
+=======
+
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/query-client";
+
+import RootStackNavigator from "@/navigation/RootStackNavigator";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+>>>>>>> 3a0bcec (Extracted stack files)
 
 export default function App() {
   return (
@@ -125,7 +135,13 @@ export default function App() {
         <SafeAreaProvider>
           <GestureHandlerRootView style={styles.root}>
             <KeyboardProvider>
+<<<<<<< HEAD
               <AppContent />
+=======
+              <NavigationContainer>
+                <RootStackNavigator />
+              </NavigationContainer>
+>>>>>>> 3a0bcec (Extracted stack files)
               <StatusBar style="auto" />
             </KeyboardProvider>
           </GestureHandlerRootView>
@@ -139,9 +155,12 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
+<<<<<<< HEAD
   loading: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
+=======
+>>>>>>> 3a0bcec (Extracted stack files)
 });

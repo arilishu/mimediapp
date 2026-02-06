@@ -1,25 +1,25 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import EmergencyScreen from "@/screens/EmergencyScreen";
+import VisitsScreen from "@/screens/VisitsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
-export type EmergencyStackParamList = {
-  Emergency: undefined;
+export type VisitsStackParamList = {
+  Visits: undefined;
 };
 
-const Stack = createNativeStackNavigator<EmergencyStackParamList>();
+const Stack = createNativeStackNavigator<VisitsStackParamList>();
 
-export default function EmergencyStackNavigator() {
+export default function VisitsStackNavigator() {
   const screenOptions = useScreenOptions();
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Emergency"
-        component={EmergencyScreen}
+        name="Visits"
+        component={VisitsScreen}
         options={{
-          headerTitle: "Centros médicos",
+          headerTitle: "Visitas Medicas",
         }}
       />
     </Stack.Navigator>

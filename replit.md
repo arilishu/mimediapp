@@ -11,18 +11,7 @@ La aplicacion centraliza datos clave de salud de toda la familia (hijos, padres,
 - **client/**: Contains all React Native code
   - **App.tsx**: Main application entry with navigation, fonts, and providers
   - **components/**: Reusable UI components (Card, Button, Input, EmptyState, etc.)
-  - **screens/**: Application screens organized by feature in folders:
-    - **auth/**: SignInScreen, SignUpScreen
-    - **dashboard/**: DashboardScreen
-    - **children/**: AddChildScreen, EditChildScreen, ChildProfileScreen
-    - **visits/**: VisitsScreen, VisitsListScreen, AddVisitScreen
-    - **vaccines/**: VaccinesScreen
-    - **appointments/**: AppointmentsScreen, AddAppointmentScreen
-    - **allergies/**: AllergiesListScreen, AddAllergyScreen
-    - **diseases/**: DiseasesListScreen, AddDiseaseScreen
-    - **medications/**: MedicationsListScreen, AddMedicationScreen
-    - **doctors/**: DoctorsListScreen, AddDoctorScreen
-    - **emergency/**: EmergencyScreen, AddHospitalScreen
+  - **screens/**: Application screens organized by feature
   - **navigation/**: Navigation structure with tab and stack navigators
   - **constants/theme.ts**: Design system colors, spacing, typography
   - **lib/api.ts**: API client with typed helpers for all entities
@@ -113,19 +102,9 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 - Password: replitClerk
 
 ## Recent Changes
-- Reorganized screens into feature-based folders (auth, dashboard, children, visits, etc.)
-- Added JWT authentication security on all API endpoints via @clerk/express
-- Added Sentry error monitoring for both frontend (sentry-expo) and backend (@sentry/node)
-- Added GitHub integration for pushing code to repository
 - Added Dashboard sections for "Mis Hijos", "Proximos Turnos", and "Vacunas Pendientes"
 - Added API endpoints for user-level appointments and vaccines queries
 - Migrated all data storage from AsyncStorage to PostgreSQL database
 - Added REST API endpoints for all entities
 - Implemented user-based data isolation using Clerk userId
 - Added child sharing with share_codes and child_access tables
-
-## Error Monitoring (Sentry)
-- Frontend: Uses sentry-expo, initialized in App.tsx
-- Backend: Uses @sentry/node, initialized in server/index.ts
-- DSN stored in SENTRY_DSN (backend) and EXPO_PUBLIC_SENTRY_DSN (frontend) secrets
-- Errors are captured automatically and sent to Sentry dashboard

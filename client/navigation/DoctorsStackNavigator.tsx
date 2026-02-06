@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import DoctorsListScreen from "@/screens/doctors/DoctorsListScreen";
+import DoctorsListScreen from "@/screens/DoctorsListScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type DoctorsStackParamList = {

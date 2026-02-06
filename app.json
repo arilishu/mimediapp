@@ -1,5 +1,6 @@
 {
   "expo": {
+<<<<<<< HEAD
     "name": "MiMediApp",
     "slug": "mimediapp",
     "version": "1.0.0",
@@ -15,13 +16,33 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#F8FAFB",
+=======
+    "name": "my-app",
+    "slug": "my-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+>>>>>>> 3a0bcec (Extracted stack files)
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
+<<<<<<< HEAD
       "predictiveBackGestureEnabled": false,
       "package": "com.mipediapp.app"
+=======
+      "predictiveBackGestureEnabled": false
+>>>>>>> 3a0bcec (Extracted stack files)
     },
     "web": {
       "output": "single",
@@ -34,9 +55,15 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
+<<<<<<< HEAD
           "backgroundColor": "#F8FAFB",
           "dark": {
             "backgroundColor": "#1A1D21"
+=======
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+>>>>>>> 3a0bcec (Extracted stack files)
           }
         }
       ],

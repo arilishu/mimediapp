@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import DashboardScreen from "@/screens/dashboard/DashboardScreen";
+import DashboardScreen from "@/screens/DashboardScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
 import { UserAvatarMenu } from "@/components/UserAvatarMenu";
 import { useScreenOptions } from "@/hooks/useScreenOptions";

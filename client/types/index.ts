@@ -31,14 +31,6 @@ export interface MedicalVisit {
   headCircumference?: number;
   notes?: string;
   createdAt: string;
-  photos?: VisitPhoto[];
-}
-
-export interface VisitPhoto {
-  id: string;
-  visitId: string;
-  photoData: string;
-  createdAt: string;
 }
 
 export interface Doctor {

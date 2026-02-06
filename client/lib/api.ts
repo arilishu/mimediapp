@@ -1,8 +1,7 @@
-import { getApiUrl, getAuthToken } from "@/lib/query-client";
+import { getApiUrl } from "@/lib/query-client";
 import type {
   Child,
   MedicalVisit,
-  VisitPhoto,
   Doctor,
   Medication,
   Vaccine,
@@ -15,34 +14,15 @@ import type {
 
 const apiUrl = getApiUrl();
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchJson<T>(path: string, options?: RequestInit, retryCount = 0): Promise<T> {
+async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
   const url = new URL(path, apiUrl).toString();
-  const token = await getAuthToken();
-  
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
   const response = await fetch(url, {
     ...options,
     headers: {
-      ...headers,
+      "Content-Type": "application/json",
       ...options?.headers,
     },
   });
-  
-  if (response.status === 401 && retryCount < 3) {
-    await delay(1000 * (retryCount + 1));
-    return fetchJson<T>(path, options, retryCount + 1);
-  }
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Request failed" }));
@@ -83,13 +63,13 @@ export const VisitsAPI = {
   getByChildId: (childId: string) =>
     fetchJson<MedicalVisit[]>(`/api/visits?childId=${childId}`),
   
-  create: (data: Omit<MedicalVisit, "id" | "createdAt" | "photos">) =>
+  create: (data: Omit<MedicalVisit, "id" | "createdAt">) =>
     fetchJson<MedicalVisit>("/api/visits", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   
-  update: (id: string, data: Partial<Omit<MedicalVisit, "photos">>) =>
+  update: (id: string, data: Partial<MedicalVisit>) =>
     fetchJson<MedicalVisit>(`/api/visits/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -97,23 +77,6 @@ export const VisitsAPI = {
   
   delete: (id: string) =>
     fetchJson<{ success: boolean }>(`/api/visits/${id}`, {
-      method: "DELETE",
-    }),
-};
-
-// ==================== VISIT PHOTOS API ====================
-export const VisitPhotosAPI = {
-  getByVisitId: (visitId: string) =>
-    fetchJson<VisitPhoto[]>(`/api/visit-photos?visitId=${visitId}`),
-  
-  create: (visitId: string, photoData: string) =>
-    fetchJson<VisitPhoto>("/api/visit-photos", {
-      method: "POST",
-      body: JSON.stringify({ visitId, photoData }),
-    }),
-  
-  delete: (id: string) =>
-    fetchJson<{ success: boolean }>(`/api/visit-photos/${id}`, {
       method: "DELETE",
     }),
 };
@@ -297,14 +260,5 @@ export const ChildAccessAPI = {
     fetchJson<{ success: boolean }>("/api/child-access", {
       method: "POST",
       body: JSON.stringify({ childId, userId, isReadOnly }),
-    }),
-};
-
-// ==================== TRANSCRIPTION API ====================
-export const TranscriptionAPI = {
-  transcribe: (audioBase64: string) =>
-    fetchJson<{ transcript: string }>("/api/transcribe", {
-      method: "POST",
-      body: JSON.stringify({ audio: audioBase64 }),
     }),
 };
