@@ -15,7 +15,11 @@ import type {
 
 const apiUrl = getApiUrl();
 
-async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchJson<T>(path: string, options?: RequestInit, retryCount = 0): Promise<T> {
   const url = new URL(path, apiUrl).toString();
   const token = await getAuthToken();
   
@@ -34,6 +38,11 @@ async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
       ...options?.headers,
     },
   });
+  
+  if (response.status === 401 && retryCount < 3) {
+    await delay(1000 * (retryCount + 1));
+    return fetchJson<T>(path, options, retryCount + 1);
+  }
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Request failed" }));

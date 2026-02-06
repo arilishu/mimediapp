@@ -41,16 +41,11 @@ export default function DashboardScreen() {
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const hasLoadedOnce = useRef(false);
 
-  const loadData = useCallback(async (retryCount = 0) => {
+  const loadData = useCallback(async () => {
     if (!userId || !isLoaded) return;
     
     const token = await getToken();
-    if (!token) {
-      if (retryCount < 3) {
-        setTimeout(() => loadData(retryCount + 1), 1000);
-      }
-      return;
-    }
+    if (!token) return;
     
     try {
       const [childrenData, appointmentsData, vaccinesData] = await Promise.all([
@@ -62,14 +57,8 @@ export default function DashboardScreen() {
       setAppointments(appointmentsData);
       setPendingVaccines(vaccinesData);
       hasLoadedOnce.current = true;
-    } catch (error: any) {
-      if (error?.message?.includes("Unauthorized") && retryCount < 3) {
-        setTimeout(() => loadData(retryCount + 1), 1000);
-        return;
-      }
-      if (!error?.message?.includes("Unauthorized")) {
-        console.error("Error loading dashboard data:", error);
-      }
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
