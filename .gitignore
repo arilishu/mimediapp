@@ -41,3 +41,9 @@ app-example
 # generated native folders
 /ios
 /android
+
+
+# suggested by chatGPT
+.local/
+static-build/
+*.bin
