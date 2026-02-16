@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, View, ActivityIndicator, Platform, Text } from "react-native";
+import { StyleSheet, View, ActivityIndicator, Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -113,16 +113,6 @@ function AppContent() {
     return (
       <View style={[styles.loading, { backgroundColor: theme.backgroundRoot }]}>
         <ActivityIndicator size="large" color={theme.primary} />
-      </View>
-    );
-  }
-
-  if (!clerkPublishableKey) {
-    return (
-      <View style={[styles.loading, { backgroundColor: theme.backgroundRoot }]}>
-        <Text style={{ color: theme.text, textAlign: "center", padding: 20 }}>
-          Error de configuración. Por favor, reinicia la app.
-        </Text>
       </View>
     );
   }

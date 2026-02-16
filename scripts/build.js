@@ -105,7 +105,23 @@ async function checkMetroHealth() {
   }
 }
 
+function writeExpoEnvFile(expoPublicDomain) {
+  const envVars = [`EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`];
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.startsWith("EXPO_PUBLIC_") && key !== "EXPO_PUBLIC_DOMAIN") {
+      envVars.push(`${key}=${value}`);
+    }
+  }
+
+  const envContent = envVars.join("\n") + "\n";
+  fs.writeFileSync(".env", envContent);
+  console.log(`Wrote .env with ${envVars.length} EXPO_PUBLIC_* variables`);
+}
+
 async function startMetro(expoPublicDomain) {
+  writeExpoEnvFile(expoPublicDomain);
+
   const isRunning = await checkMetroHealth();
   if (isRunning) {
     console.log("Metro already running");
