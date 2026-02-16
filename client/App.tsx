@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { StyleSheet, View, ActivityIndicator, Platform } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { StyleSheet, View, ActivityIndicator, Platform, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -25,13 +25,11 @@ import AuthNavigator from "@/navigation/AuthNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const SPLASH_TIMEOUT_MS = 10000;
 
-if (!clerkPublishableKey) {
-  throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable");
-}
+const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
 
 function AuthenticatedApp() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
@@ -89,6 +87,7 @@ function AuthenticatedApp() {
 
 function AppContent() {
   const { theme } = useTheme();
+  const [splashTimedOut, setSplashTimedOut] = useState(false);
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -96,15 +95,34 @@ function AppContent() {
   });
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashTimedOut(true);
+      SplashScreen.hideAsync().catch(() => {});
+    }, SPLASH_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!fontsLoaded && !fontError && !splashTimedOut) {
     return (
       <View style={[styles.loading, { backgroundColor: theme.backgroundRoot }]}>
         <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
+  if (!clerkPublishableKey) {
+    return (
+      <View style={[styles.loading, { backgroundColor: theme.backgroundRoot }]}>
+        <Text style={{ color: theme.text, textAlign: "center", padding: 20 }}>
+          Error de configuración. Por favor, reinicia la app.
+        </Text>
       </View>
     );
   }
