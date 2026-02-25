@@ -22,6 +22,7 @@ import { registerForPushNotificationsAsync } from "@/lib/notifications";
 
 import RootStackNavigator from "@/navigation/RootStackNavigator";
 import AuthNavigator from "@/navigation/AuthNavigator";
+import Constants from "expo-constants";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -29,7 +30,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const SPLASH_TIMEOUT_MS = 10000;
 
-const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
+const clerkPublishableKey =
+  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  Constants.expoConfig?.extra?.clerkPublishableKey ||
+  "";
 
 function AuthenticatedApp() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
