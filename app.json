@@ -2,7 +2,7 @@
   "expo": {
     "name": "MiMediApp",
     "slug": "mimediapp",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mimediapp",
@@ -45,8 +45,6 @@
     "experiments": {
       "reactCompiler": true
     },
-    "extra": {
-      "clerkPublishableKey": "pk_test_REDACTED"
-    }
+    "extra": {}
   }
 }
