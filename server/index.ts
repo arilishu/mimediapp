@@ -240,6 +240,12 @@ function setupErrorHandler(app: express.Application) {
   setupCors(app);
   setupBodyParsing(app);
   
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction && process.env.CLERK_PROD_SECRET_KEY) {
+    process.env.CLERK_SECRET_KEY = process.env.CLERK_PROD_SECRET_KEY;
+    log("Using Clerk production keys");
+  }
+  
   app.use(clerkMiddleware());
   
   setupRequestLogging(app);

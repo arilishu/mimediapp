@@ -108,9 +108,20 @@ async function checkMetroHealth() {
 function writeExpoEnvFile(expoPublicDomain) {
   const envVars = [`EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`];
 
+  if (process.env.CLERK_PROD_PUBLISHABLE_KEY) {
+    envVars.push(`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=${process.env.CLERK_PROD_PUBLISHABLE_KEY}`);
+    console.log("Using Clerk PRODUCTION publishable key for build");
+  }
+
   for (const [key, value] of Object.entries(process.env)) {
-    if (key.startsWith("EXPO_PUBLIC_") && key !== "EXPO_PUBLIC_DOMAIN") {
+    if (key.startsWith("EXPO_PUBLIC_") && key !== "EXPO_PUBLIC_DOMAIN" && key !== "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY") {
       envVars.push(`${key}=${value}`);
+    }
+  }
+
+  if (!envVars.some(v => v.startsWith("EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY="))) {
+    if (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+      envVars.push(`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=${process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}`);
     }
   }
 
