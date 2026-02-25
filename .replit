@@ -78,4 +78,3 @@ ensurePreviewReachable = "/status"
 [userenv]
 
 [userenv.shared]
-EXPO_PUBLIC_SENTRY_DSN = "${SENTRY_DSN}"
