@@ -108,9 +108,10 @@ async function checkMetroHealth() {
 function writeExpoEnvFile(expoPublicDomain) {
   const envVars = [`EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`];
 
-  if (process.env.CLERK_PUBLISHABLE_KEY) {
-    envVars.push(`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=${process.env.CLERK_PUBLISHABLE_KEY}`);
-    console.log(`Using CLERK_PUBLISHABLE_KEY: ${process.env.CLERK_PUBLISHABLE_KEY.substring(0, 15)}...`);
+  const clerkKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (clerkKey) {
+    envVars.push(`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=${clerkKey}`);
+    console.log(`Using Clerk publishable key: ${clerkKey.substring(0, 15)}...`);
   }
 
   for (const [key, value] of Object.entries(process.env)) {
@@ -129,8 +130,13 @@ async function startMetro(expoPublicDomain) {
 
   const isRunning = await checkMetroHealth();
   if (isRunning) {
-    console.log("Metro already running");
-    return;
+    console.log("Metro already running - killing to reload env vars...");
+    try {
+      const { execSync } = require("child_process");
+      execSync("pkill -f 'expo start' || true", { stdio: "ignore" });
+      execSync("pkill -f '@expo/cli' || true", { stdio: "ignore" });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    } catch (e) {}
   }
 
   console.log("Starting Metro...");

@@ -5,9 +5,9 @@ modules = ["nodejs-22", "postgresql-16"]
 channel = "stable-24_05"
 
 [deployment]
-deploymentTarget = "cloudrun"
-build = ["sh", "-c", "npm run expo:static:build && npm run server:build"]
-run = ["npm", "run", "server:prod"]
+deploymentTarget = "autoscale"
+build = ["bash", "-c", "npm run expo:static:build && npm run server:build"]
+run = ["bash", "-c", "NODE_ENV=production npm run server:prod"]
 
 [[ports]]
 localPort = 5000
@@ -80,9 +80,5 @@ ensurePreviewReachable = "/status"
 [userenv.shared]
 
 [userenv.development]
-CLERK_PUBLISHABLE_KEY = "REDACTED"
-CLERK_SECRET_KEY = "REDACTED"
 
 [userenv.production]
-CLERK_PUBLISHABLE_KEY = "REDACTED"
-CLERK_SECRET_KEY = "REDACTED"
