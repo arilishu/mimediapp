@@ -94,9 +94,11 @@ function clearMetroCache() {
   console.log("Cache cleared");
 }
 
+const BUILD_PORT = 8082;
+
 async function checkMetroHealth() {
   try {
-    const response = await fetch("http://localhost:8081/status", {
+    const response = await fetch(`http://localhost:${BUILD_PORT}/status`, {
       signal: AbortSignal.timeout(5000),
     });
     return response.ok;
@@ -130,22 +132,17 @@ async function startMetro(expoPublicDomain) {
 
   const isRunning = await checkMetroHealth();
   if (isRunning) {
-    console.log("Metro already running - killing to reload env vars...");
-    try {
-      const { execSync } = require("child_process");
-      execSync("pkill -f 'expo start' || true", { stdio: "ignore" });
-      execSync("pkill -f '@expo/cli' || true", { stdio: "ignore" });
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    } catch (e) {}
+    console.log(`Build Metro already running on port ${BUILD_PORT}`);
+    return;
   }
 
-  console.log("Starting Metro...");
+  console.log(`Starting Metro for build on port ${BUILD_PORT}...`);
   console.log(`Setting EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`);
   const env = {
     ...process.env,
     EXPO_PUBLIC_DOMAIN: expoPublicDomain,
   };
-  metroProcess = spawn("npm", ["run", "expo:start:static:build"], {
+  metroProcess = spawn("npx", ["expo", "start", "--no-dev", "--minify", "--localhost", "--port", String(BUILD_PORT)], {
     stdio: ["ignore", "pipe", "pipe"],
     detached: false,
     env,
@@ -215,7 +212,7 @@ async function downloadFile(url, outputPath) {
 }
 
 async function downloadBundle(platform, timestamp) {
-  const url = new URL("http://localhost:8081/client/index.bundle");
+  const url = new URL(`http://localhost:${BUILD_PORT}/client/index.bundle`);
   url.searchParams.set("platform", platform);
   url.searchParams.set("dev", "false");
   url.searchParams.set("hot", "false");
@@ -243,7 +240,7 @@ async function downloadManifest(platform) {
 
   try {
     console.log(`Fetching ${platform} manifest...`);
-    const response = await fetch("http://localhost:8081/manifest", {
+    const response = await fetch(`http://localhost:${BUILD_PORT}/manifest`, {
       headers: { "expo-platform": platform },
       signal: controller.signal,
     });
@@ -346,7 +343,7 @@ function extractAssets(timestamp) {
       const originalPath = match[1];
       const filename = match[3] + "." + match[4];
 
-      const tempUrl = new URL(`http://localhost:8081${originalPath}`);
+      const tempUrl = new URL(`http://localhost:${BUILD_PORT}${originalPath}`);
       const unstablePath = tempUrl.searchParams.get("unstable_path");
 
       if (!unstablePath) {
@@ -390,7 +387,7 @@ async function downloadAssets(assets, timestamp) {
   const downloadPromises = assets.map(async (asset) => {
     const platform = Array.from(asset.platforms)[0];
 
-    const tempUrl = new URL(`http://localhost:8081${asset.originalPath}`);
+    const tempUrl = new URL(`http://localhost:${BUILD_PORT}${asset.originalPath}`);
     const unstablePath = tempUrl.searchParams.get("unstable_path");
 
     if (!unstablePath) {
@@ -399,7 +396,7 @@ async function downloadAssets(assets, timestamp) {
 
     const decodedPath = decodeURIComponent(unstablePath);
     const metroUrl = new URL(
-      `http://localhost:8081${path.posix.join("/assets", decodedPath, asset.filename)}`,
+      `http://localhost:${BUILD_PORT}${path.posix.join("/assets", decodedPath, asset.filename)}`,
     );
     metroUrl.searchParams.set("platform", platform);
     metroUrl.searchParams.set("hash", asset.hash);
@@ -458,7 +455,7 @@ function updateBundleUrls(timestamp, baseUrl) {
     bundle = bundle.replace(
       /httpServerLocation:"(\/[^"]+)"/g,
       (_match, capturedPath) => {
-        const tempUrl = new URL(`http://localhost:8081${capturedPath}`);
+        const tempUrl = new URL(`http://localhost:${BUILD_PORT}${capturedPath}`);
         const unstablePath = tempUrl.searchParams.get("unstable_path");
 
         if (!unstablePath) {

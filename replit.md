@@ -78,7 +78,10 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 - **Methods**: Email/Password, Google OAuth SSO
 - **Token Storage**: expo-secure-store
 - **Screens**: SignInScreen, SignUpScreen (with email verification)
-- **Secret**: EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY (required)
+- **Key Management**:
+  - Development: `pk_test_REDACTED hardcoded in App.tsx via `__DEV__` flag; backend uses `CLERK_DEV_PUBLISHABLE_KEY` and `CLERK_DEV_SECRET_KEY` env vars (dev-scoped)
+  - Production: `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` secret (pk_live_REDACTED inlined in static build; backend uses `CLERK_SECRET_KEY` secret (sk_live_REDACTED and falls back to `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
+  - Server auto-detects environment via `NODE_ENV` and selects correct keys
 - **User ID**: All API calls use Clerk userId for data isolation
 
 ## Key Features
