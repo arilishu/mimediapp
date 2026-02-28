@@ -80,5 +80,7 @@ ensurePreviewReachable = "/status"
 [userenv.shared]
 
 [userenv.development]
+CLERK_DEV_PUBLISHABLE_KEY = "pk_test_REDACTED"
+CLERK_DEV_SECRET_KEY = "sk_test_REDACTED"
 
 [userenv.production]

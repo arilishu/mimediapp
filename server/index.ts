@@ -240,11 +240,18 @@ function setupErrorHandler(app: express.Application) {
   setupCors(app);
   setupBodyParsing(app);
   
+  const isDev = process.env.NODE_ENV !== "production";
+  if (isDev && process.env.CLERK_DEV_SECRET_KEY) {
+    process.env.CLERK_SECRET_KEY = process.env.CLERK_DEV_SECRET_KEY;
+  }
+  if (isDev && process.env.CLERK_DEV_PUBLISHABLE_KEY) {
+    process.env.CLERK_PUBLISHABLE_KEY = process.env.CLERK_DEV_PUBLISHABLE_KEY;
+  }
   if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     process.env.CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
   }
-  log(`Clerk secret: ${(process.env.CLERK_SECRET_KEY || "").substring(0, 15)}...`);
-  log(`Clerk pubkey: ${(process.env.CLERK_PUBLISHABLE_KEY || "").substring(0, 15)}...`);
+  log(`Clerk [${isDev ? "dev" : "prod"}] secret: ${(process.env.CLERK_SECRET_KEY || "").substring(0, 15)}...`);
+  log(`Clerk [${isDev ? "dev" : "prod"}] pubkey: ${(process.env.CLERK_PUBLISHABLE_KEY || "").substring(0, 15)}...`);
   
   app.use(clerkMiddleware());
   
