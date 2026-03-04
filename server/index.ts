@@ -117,7 +117,13 @@ function getAppName(): string {
   }
 }
 
-function serveExpoManifest(platform: string, res: Response) {
+function getExternalBaseUrl(req: Request): string {
+  const forwardedProto = req.header("x-forwarded-proto") || req.protocol || "https";
+  const forwardedHost = req.header("x-forwarded-host") || req.get("host");
+  return `${forwardedProto}://${forwardedHost}`;
+}
+
+function serveExpoManifest(platform: string, req: Request, res: Response) {
   const manifestPath = path.resolve(
     process.cwd(),
     "static-build",
@@ -135,7 +141,10 @@ function serveExpoManifest(platform: string, res: Response) {
   res.setHeader("expo-sfv-version", "0");
   res.setHeader("content-type", "application/json");
 
-  const manifest = fs.readFileSync(manifestPath, "utf-8");
+  const baseUrl = getExternalBaseUrl(req);
+  let manifest = fs.readFileSync(manifestPath, "utf-8");
+  const devDomainPattern = /https?:\/\/[a-z0-9-]+\.spock\.replit\.dev/g;
+  manifest = manifest.replace(devDomainPattern, baseUrl);
   res.send(manifest);
 }
 
@@ -192,7 +201,7 @@ function configureExpoAndLanding(app: express.Application) {
 
     const platform = req.header("expo-platform");
     if (platform && (platform === "ios" || platform === "android")) {
-      return serveExpoManifest(platform, res);
+      return serveExpoManifest(platform, req, res);
     }
 
     if (req.path === "/") {
@@ -236,6 +245,50 @@ function setupErrorHandler(app: express.Application) {
   });
 }
 
+function rewriteStaticBuildDomains() {
+  const prodDomains = process.env.REPLIT_DOMAINS;
+  if (!prodDomains) {
+    log("No REPLIT_DOMAINS found, skipping static build domain rewrite");
+    return;
+  }
+
+  const prodDomain = prodDomains.split(",")[0].trim();
+  const prodBaseUrl = `https://${prodDomain}`;
+  const devDomainPattern = /https?:\/\/[a-z0-9-]+\.spock\.replit\.dev/g;
+  const staticBuildDir = path.resolve(process.cwd(), "static-build");
+
+  if (!fs.existsSync(staticBuildDir)) {
+    log("No static-build directory found, skipping domain rewrite");
+    return;
+  }
+
+  let rewriteCount = 0;
+  const rewriteFile = (filePath: string) => {
+    const content = fs.readFileSync(filePath, "utf-8");
+    if (devDomainPattern.test(content)) {
+      devDomainPattern.lastIndex = 0;
+      const newContent = content.replace(devDomainPattern, prodBaseUrl);
+      fs.writeFileSync(filePath, newContent);
+      rewriteCount++;
+    }
+  };
+
+  const walkDir = (dir: string) => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walkDir(fullPath);
+      } else if (entry.name.endsWith(".js") || entry.name.endsWith(".json")) {
+        rewriteFile(fullPath);
+      }
+    }
+  };
+
+  walkDir(staticBuildDir);
+  log(`Rewrote dev domains to ${prodBaseUrl} in ${rewriteCount} file(s)`);
+}
+
 (async () => {
   setupCors(app);
   setupBodyParsing(app);
@@ -253,6 +306,10 @@ function setupErrorHandler(app: express.Application) {
   log(`Clerk [${isDev ? "dev" : "prod"}] secret: ${(process.env.CLERK_SECRET_KEY || "").substring(0, 15)}...`);
   log(`Clerk [${isDev ? "dev" : "prod"}] pubkey: ${(process.env.CLERK_PUBLISHABLE_KEY || "").substring(0, 15)}...`);
   
+  if (!isDev) {
+    rewriteStaticBuildDomains();
+  }
+
   app.use(clerkMiddleware());
   
   setupRequestLogging(app);
