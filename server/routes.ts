@@ -21,6 +21,8 @@ function generateShareCode(): string {
 function requireAuth(req: Request, res: Response): string | null {
   const auth = getAuth(req);
   if (!auth.userId) {
+    const authHeader = req.headers.authorization;
+    console.log(`Auth failed: header=${authHeader ? authHeader.substring(0, 30) + '...' : 'none'}, sessionClaims=${JSON.stringify(auth.sessionClaims || null)}, reason=${(auth as any).reason || 'unknown'}`);
     res.status(401).json({ error: "Unauthorized" });
     return null;
   }
