@@ -49,4 +49,4 @@ app-example
 static-build/
 *.bin
 
-.replit
+.replit.replit

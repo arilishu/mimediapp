@@ -80,7 +80,7 @@ All data is stored in PostgreSQL for multi-user access and cross-device synchron
 - **Screens**: SignInScreen, SignUpScreen (with email verification)
 - **Key Management**:
   - Development: `EXPO_PUBLIC_CLERK_DEV_PUBLISHABLE_KEY` env var (dev-scoped); backend uses `CLERK_DEV_PUBLISHABLE_KEY` and `CLERK_DEV_SECRET_KEY` env vars (dev-scoped)
-  - Production: `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` secret (pk_live_REDACTED inlined in static build; backend uses `CLERK_SECRET_KEY` secret (sk_live_REDACTED and falls back to `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
+  - Production: `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` secret (pk_live_*) inlined in static build; backend uses `CLERK_SECRET_KEY` secret (sk_live_*) and falls back to `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
   - Server auto-detects environment via `NODE_ENV` and selects correct keys
   - Server passes keys explicitly to clerkMiddleware() for reliability
   - Production server rewrites dev domains to production domain at startup via `rewriteStaticBuildDomains()`
