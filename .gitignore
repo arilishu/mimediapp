@@ -48,3 +48,5 @@ app-example
 .local/
 static-build/
 *.bin
+
+.replit
