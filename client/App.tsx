@@ -30,7 +30,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 const SPLASH_TIMEOUT_MS = 10000;
 
 const clerkPublishableKey = __DEV__
-  ? "pk_test_REDACTED"
+  ? (process.env.EXPO_PUBLIC_CLERK_DEV_PUBLISHABLE_KEY || "")
   : (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "");
 
 function AuthenticatedApp() {
