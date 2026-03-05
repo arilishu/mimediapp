@@ -1,0 +1,6 @@
+regex:CLERK_SECRET_KEY\s*=\s*"[^\"]+"==>CLERK_SECRET_KEY = "REDACTED"
+regex:CLERK_PUBLISHABLE_KEY\s*=\s*"[^\"]+"==>CLERK_PUBLISHABLE_KEY = "REDACTED"
+regex:sk_live_[^" \t\r\n]+==>sk_live_REDACTED
+regex:sk_test_[^" \t\r\n]+==>sk_test_REDACTED
+regex:pk_live_[^" \t\r\n]+==>pk_live_REDACTED
+regex:pk_test_[^" \t\r\n]+==>pk_test_REDACTED
