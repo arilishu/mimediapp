@@ -19,7 +19,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_DOMAIN": "mimediapp.vercel.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_aGFuZHktY29sdC0xMS5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsubWltZWRpLmFwcCQ"
       }
     }
   },

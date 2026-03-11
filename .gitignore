@@ -50,3 +50,4 @@ static-build/
 *.bin
 
 .replit.replit
+.vercel
