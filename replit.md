@@ -76,7 +76,9 @@ git commit -m "descripción del cambio"
 git push
 
 # 2. Buildear en la nube (~15-20 min)
-eas build --platform ios --profile production
+# eas build --platform ios --profile production //esto no va porque me pide credenciales
+# usar esta de aca abajo que usa credenciales de Alu
+eas build --platform ios --profile production --non-interactive 
 
 # 3. Subir a TestFlight cuando termina el build
 eas submit --platform ios --latest
@@ -98,6 +100,7 @@ EXPO_PUBLIC_CLERK_DEV_PUBLISHABLE_KEY= # Clerk frontend key (desarrollo)
 OPENAI_API_KEY=         # OpenAI
 PORT=5001               # Puerto local del servidor
 EXPO_PUBLIC_DOMAIN=localhost:5001    # Dominio local para la app
+NODE_ENV=production
 ```
 
 ---
