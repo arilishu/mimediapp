@@ -6,10 +6,16 @@ import { randomUUID } from "crypto";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+let openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    });
+  }
+  return openai;
+}
 
 export async function convertToWav(audioBuffer: Buffer): Promise<Buffer> {
   const inputPath = join(tmpdir(), `input-${randomUUID()}`);
@@ -48,7 +54,7 @@ export async function convertToWav(audioBuffer: Buffer): Promise<Buffer> {
 export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   const wavBuffer = await convertToWav(audioBuffer);
   const file = await toFile(wavBuffer, "audio.wav");
-  const response = await openai.audio.transcriptions.create({
+  const response = await getOpenAI().audio.transcriptions.create({
     file,
     model: "gpt-4o-mini-transcribe",
   });

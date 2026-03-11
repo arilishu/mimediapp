@@ -3,6 +3,8 @@ const http = require("http");
 
 const config = getDefaultConfig(__dirname);
 
+const SERVER_PORT = process.env.PORT || 3001;
+
 config.server = {
   ...config.server,
   enhanceMiddleware: (middleware) => {
@@ -10,10 +12,10 @@ config.server = {
       if (req.url && req.url.startsWith("/api")) {
         const options = {
           hostname: "127.0.0.1",
-          port: 5000,
+          port: SERVER_PORT,
           path: req.url,
           method: req.method,
-          headers: { ...req.headers, host: "127.0.0.1:5000" },
+          headers: { ...req.headers, host: `127.0.0.1:${SERVER_PORT}` },
         };
 
         const proxyReq = http.request(options, (proxyRes) => {

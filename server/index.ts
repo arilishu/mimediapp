@@ -289,10 +289,10 @@ function rewriteStaticBuildDomains() {
   log(`Rewrote dev domains to ${prodBaseUrl} in ${rewriteCount} file(s)`);
 }
 
-(async () => {
+const setupPromise = (async () => {
   setupCors(app);
   setupBodyParsing(app);
-  
+
   const isDev = process.env.NODE_ENV !== "production";
   if (isDev && process.env.CLERK_DEV_SECRET_KEY) {
     process.env.CLERK_SECRET_KEY = process.env.CLERK_DEV_SECRET_KEY;
@@ -305,7 +305,7 @@ function rewriteStaticBuildDomains() {
   }
   log(`Clerk [${isDev ? "dev" : "prod"}] secret: ${(process.env.CLERK_SECRET_KEY || "").substring(0, 15)}...`);
   log(`Clerk [${isDev ? "dev" : "prod"}] pubkey: ${(process.env.CLERK_PUBLISHABLE_KEY || "").substring(0, 15)}...`);
-  
+
   if (!isDev) {
     rewriteStaticBuildDomains();
   }
@@ -314,24 +314,40 @@ function rewriteStaticBuildDomains() {
     secretKey: process.env.CLERK_SECRET_KEY,
     publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
   }));
-  
+
   setupRequestLogging(app);
 
-  configureExpoAndLanding(app);
+  // Static file serving only needed outside Vercel (local dev / Replit)
+  if (!process.env.VERCEL) {
+    configureExpoAndLanding(app);
+  }
 
   const server = await registerRoutes(app);
 
   setupErrorHandler(app);
 
-  const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`express server serving on port ${port}`);
-    },
-  );
+  return server;
 })();
+
+// Vercel: export the Express app as a serverless handler
+export default async (req: Request, res: Response) => {
+  await setupPromise;
+  app(req, res);
+};
+
+// Local dev / Replit: listen on a port
+if (!process.env.VERCEL) {
+  setupPromise.then((server) => {
+    const port = parseInt(process.env.PORT || "5000", 10);
+    server.listen(
+      {
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      },
+      () => {
+        log(`express server serving on port ${port}`);
+      },
+    );
+  });
+}
